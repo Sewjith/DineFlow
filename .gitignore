@@ -1,0 +1,32 @@
+# ---- Java / Maven ----
+target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+.mvn/.develocity/
+
+# ---- Node / Vite ----
+node_modules/
+frontend/dist/
+dist/
+*.local
+
+# ---- Env / secrets ----
+.env
+.env.*
+!.env.example
+
+# ---- IDE / OS ----
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# ---- Logs ----
+*.log
+logs/
+
+# ---- Project-local notes (not tracked) ----
+CLAUDE.md
+What to build.txt

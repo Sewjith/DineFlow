@@ -1,0 +1,26 @@
+# DineFlow local stack.
+# Step 1: PostgreSQL only. The four Spring Boot services and the frontend are added
+# in a later step (Step 6). Values come from a local .env file (see .env.example);
+# sensible defaults are provided inline so `docker compose up` works with no .env.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dineflow-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-dineflow}
+      POSTGRES_USER: ${POSTGRES_USER:-dineflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dineflow}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - dineflow-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dineflow} -d ${POSTGRES_DB:-dineflow}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  dineflow-pgdata:
