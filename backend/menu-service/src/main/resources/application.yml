@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: menu-service
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:dineflow}
+    username: ${DB_USER:dineflow}
+    password: ${DB_PASSWORD:dineflow}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    defer-datasource-initialization: true
+    properties:
+      hibernate:
+        format_sql: true
+  sql:
+    init:
+      mode: always
+
+server:
+  port: ${SERVER_PORT:8081}
+
+logging:
+  level:
+    org.hibernate.SQL: info
