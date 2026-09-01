@@ -1,6 +1,6 @@
 spring:
   application:
-    name: menu-service
+    name: reservation-service
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:dineflow}
     username: ${DB_USER:dineflow}
@@ -18,7 +18,7 @@ spring:
       mode: always
 
 server:
-  port: ${SERVER_PORT:8081}
+  port: ${SERVER_PORT:8083}
 
 # Shared JWT secret — must match the gateway's app.jwt.secret.
 app:
