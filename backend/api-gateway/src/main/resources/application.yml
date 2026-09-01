@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      # CORS handled centrally at the gateway for the browser frontend.
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "${FRONTEND_ORIGIN:http://localhost:5173}"
+            allowedMethods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+            allowedHeaders: "*"
+            allowCredentials: true
+      routes:
+        # /api/categories/** and /api/menu-items/** -> menu-service (strip the /api prefix)
+        - id: menu-service
+          uri: ${MENU_SERVICE_URI:http://localhost:8081}
+          predicates:
+            - Path=/api/categories/**,/api/menu-items/**
+          filters:
+            - StripPrefix=1
+        - id: order-service
+          uri: ${ORDER_SERVICE_URI:http://localhost:8082}
+          predicates:
+            - Path=/api/orders/**
+          filters:
+            - StripPrefix=1
+        - id: reservation-service
+          uri: ${RESERVATION_SERVICE_URI:http://localhost:8083}
+          predicates:
+            - Path=/api/reservations/**
+          filters:
+            - StripPrefix=1
+
+server:
+  port: ${SERVER_PORT:8080}
+
+# Admin account (single user) and JWT signing. Override via environment in real use.
+app:
+  admin:
+    username: ${ADMIN_USERNAME:admin}
+    # BCrypt hash of "admin123" (dev default). Generate a new one with PasswordHashTool.
+    password-hash: ${ADMIN_PASSWORD_HASH:$2a$10$pxdmOOkSyHcnZlLhRRVjCusWX8OKEA.5UmvEUS8oPuwOVjnfROWaa}
+  jwt:
+    # Must be >= 32 chars for HS256. Shared with the downstream services.
+    secret: ${JWT_SECRET:dev-local-secret-please-change-me-32chars-min}
+    expiration-minutes: ${JWT_EXPIRATION_MINUTES:120}
