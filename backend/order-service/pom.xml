@@ -12,10 +12,10 @@
     </parent>
 
     <groupId>com.dineflow</groupId>
-    <artifactId>menu-service</artifactId>
+    <artifactId>order-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>menu-service</name>
-    <description>DineFlow menu service — categories and menu items</description>
+    <name>order-service</name>
+    <description>DineFlow order service — orders, order items and status</description>
 
     <properties>
         <java.version>21</java.version>
@@ -40,6 +40,12 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- JWT validation (shared secret issued by the gateway) -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
@@ -60,16 +66,10 @@
         </dependency>
 
         <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
