@@ -1,6 +1,7 @@
 package com.dineflow.order.controller;
 
 import com.dineflow.order.domain.OrderStatus;
+import com.dineflow.order.dto.DashboardResponse;
 import com.dineflow.order.dto.OrderResponse;
 import com.dineflow.order.dto.PlaceOrderRequest;
 import com.dineflow.order.dto.UpdateStatusRequest;
@@ -43,6 +44,11 @@ public class OrderController {
     }
 
     // --- Admin ---
+
+    @GetMapping("/dashboard")
+    public DashboardResponse dashboard() {
+        return orderService.dashboard();
+    }
 
     @GetMapping
     public List<OrderResponse> list(@RequestParam(required = false) OrderStatus status) {

@@ -6,6 +6,7 @@ export const orderApi = {
     client.get(`/orders/reference/${reference}`).then((r) => r.data),
 
   // admin
+  dashboard: () => client.get('/orders/dashboard').then((r) => r.data),
   list: (status) =>
     client.get('/orders', { params: status ? { status } : {} }).then((r) => r.data),
   getById: (id) => client.get(`/orders/${id}`).then((r) => r.data),

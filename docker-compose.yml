@@ -1,7 +1,14 @@
-# DineFlow local stack.
-# Step 1: PostgreSQL only. The four Spring Boot services and the frontend are added
-# in a later step (Step 6). Values come from a local .env file (see .env.example);
-# sensible defaults are provided inline so `docker compose up` works with no .env.
+# DineFlow full local stack: postgres + 4 Spring Boot services + frontend.
+# Start everything with:  docker compose up --build
+# Values come from a local .env file (see .env.example); sensible defaults are inline.
+
+x-db-env: &db-env
+  DB_HOST: postgres
+  DB_PORT: 5432
+  DB_NAME: ${POSTGRES_DB:-dineflow}
+  DB_USER: ${POSTGRES_USER:-dineflow}
+  DB_PASSWORD: ${POSTGRES_PASSWORD:-dineflow}
+  JWT_SECRET: ${JWT_SECRET:-dev-local-secret-please-change-me-32chars-min}
 
 services:
   postgres:
@@ -11,9 +18,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-dineflow}
       POSTGRES_USER: ${POSTGRES_USER:-dineflow}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dineflow}
-    # Host port 5433 to avoid clashing with a native PostgreSQL already on 5432.
-    # Container-internal port stays 5432 (used by services on the compose network).
     ports:
+      # Host 5433 avoids clashing with a native PostgreSQL on 5432. Internal port stays 5432.
       - "${POSTGRES_PORT:-5433}:5432"
     volumes:
       - dineflow-pgdata:/var/lib/postgresql/data
@@ -22,6 +28,60 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    restart: unless-stopped
+
+  menu-service:
+    build: ./backend/menu-service
+    environment:
+      <<: *db-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  order-service:
+    build: ./backend/order-service
+    environment:
+      <<: *db-env
+      MENU_SERVICE_URL: http://menu-service:8081
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  reservation-service:
+    build: ./backend/reservation-service
+    environment:
+      <<: *db-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  api-gateway:
+    build: ./backend/api-gateway
+    environment:
+      JWT_SECRET: ${JWT_SECRET:-dev-local-secret-please-change-me-32chars-min}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH:-$$2a$$10$$pxdmOOkSyHcnZlLhRRVjCusWX8OKEA.5UmvEUS8oPuwOVjnfROWaa}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:5173}
+      MENU_SERVICE_URI: http://menu-service:8081
+      ORDER_SERVICE_URI: http://order-service:8082
+      RESERVATION_SERVICE_URI: http://reservation-service:8083
+    ports:
+      - "8080:8080"
+    depends_on:
+      - menu-service
+      - order-service
+      - reservation-service
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - api-gateway
     restart: unless-stopped
 
 volumes:

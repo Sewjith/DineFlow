@@ -55,17 +55,81 @@ public customer endpoints are open.
 
 ## Getting Started
 
-_Full run instructions (local dev + `docker-compose up`) are added as the services come
-online. See `CLAUDE.md` for the current build status and conventions._
+### Option A — Docker (everything with one command)
+
+Requires Docker Desktop. From the repo root:
+
+```bash
+docker compose up --build
+```
+
+This builds and starts Postgres + the four services + the frontend. Then open:
+
+- **Customer app / Admin portal:** http://localhost:5173  (admin at `/admin`)
+- **API gateway:** http://localhost:8080
+- **Postgres:** host port **5433** (container-internal 5432)
+
+Stop with `docker compose down` (add `-v` to also drop the database volume).
+
+### Option B — Local dev (hot reload)
+
+Requires **JDK 21**, **Maven** (or the bundled `mvnw` wrapper), and **Node 20**.
+
+```bash
+# 1. Start Postgres only
+docker compose up -d postgres
+
+# 2. Run each service (separate terminals) — e.g. menu-service
+cd backend/menu-service && mvn spring-boot:run     # 8081
+cd backend/order-service && mvn spring-boot:run    # 8082
+cd backend/reservation-service && mvn spring-boot:run  # 8083
+cd backend/api-gateway && mvn spring-boot:run      # 8080
+
+# 3. Frontend dev server (proxies /api -> :8080)
+cd frontend && npm install && npm run dev          # 5173
+```
+
+### Default admin login
+
+`admin` / `admin123` (override via `ADMIN_USERNAME` / `ADMIN_PASSWORD_HASH`; generate a
+new hash with `PasswordHashTool` in api-gateway).
+
+## Testing
+
+```bash
+cd backend/order-service && mvn test        # order totals + status transitions
+cd backend/reservation-service && mvn test  # table availability / overlap logic
+```
+
+CI (`.github/workflows/build.yml`) builds all four services and the frontend on every push.
+
+## How one request flows (React → DB)
+
+Placing an order, end to end:
+
+1. **React** — `CheckoutPage` collects name/phone/type/items and calls
+   `orderApi.place()` → `POST /api/orders` via the axios client (`frontend/src/api`).
+2. **Vite/nginx** proxies `/api` to the **API Gateway** (`:8080`).
+3. **Gateway** matches the `/api/orders/**` route and forwards to **order-service**
+   (`:8082`), stripping the `/api` prefix.
+4. **order-service** `OrderController.place` → `OrderService.placeOrder`: validates the
+   request, then calls **menu-service** via `MenuClient` (Spring `RestClient`) to fetch
+   each item's **live price** and availability — the total is computed server-side.
+5. JPA saves the `orders` + `order_item` rows to **PostgreSQL**; the generated
+   `ORD-XXXXXX` reference comes back up the chain to the browser, which redirects to
+   `/track?ref=...`.
+
+Admin writes carry a JWT (`Authorization: Bearer …`) issued by the gateway's
+`/api/auth/login`; each service's `JwtAuthFilter` validates it before allowing the call.
 
 ## Project Layout
 
 ```
 DineFlow/
 ├── backend/
-│   ├── api-gateway/          # Spring Cloud Gateway + auth/login
+│   ├── api-gateway/          # Spring Cloud Gateway + auth/login (JWT)
 │   ├── menu-service/         # categories & menu items
-│   ├── order-service/        # orders & status
+│   ├── order-service/        # orders, status, dashboard
 │   └── reservation-service/  # tables & reservations
 ├── frontend/                 # single Vite React app (customer + admin)
 ├── docker-compose.yml

@@ -6,6 +6,7 @@ import com.dineflow.order.domain.Order;
 import com.dineflow.order.domain.OrderItem;
 import com.dineflow.order.domain.OrderStatus;
 import com.dineflow.order.domain.OrderType;
+import com.dineflow.order.dto.DashboardResponse;
 import com.dineflow.order.dto.OrderLineRequest;
 import com.dineflow.order.dto.OrderResponse;
 import com.dineflow.order.dto.PlaceOrderRequest;
@@ -18,6 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.security.SecureRandom;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -100,6 +104,21 @@ public class OrderService {
         }
         order.setStatus(target);
         return OrderResponse.fromEntity(order);
+    }
+
+    @Transactional(readOnly = true)
+    public DashboardResponse dashboard() {
+        ZoneId zone = ZoneId.systemDefault();
+        LocalDate today = LocalDate.now(zone);
+        Instant startOfToday = today.atStartOfDay(zone).toInstant();
+
+        List<Order> todaysActive = orderRepository.findByCreatedAtGreaterThanEqual(startOfToday).stream()
+                .filter(order -> order.getStatus() != OrderStatus.CANCELLED)
+                .toList();
+        BigDecimal revenue = todaysActive.stream()
+                .map(Order::getTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return new DashboardResponse(today, todaysActive.size(), revenue);
     }
 
     private Order getOrder(Long id) {
