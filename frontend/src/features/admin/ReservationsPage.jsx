@@ -62,7 +62,7 @@ export default function ReservationsPage() {
       ) : (
         <div className="card overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-slate-100 text-left text-slate-600">
+            <thead className="bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">
               <tr>
                 <th className="px-4 py-3">Time</th>
                 <th className="px-4 py-3">Table</th>
@@ -74,7 +74,7 @@ export default function ReservationsPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {reservations.map((r) => (
-                <tr key={r.id}>
+                <tr key={r.id} className="transition hover:bg-slate-50/70">
                   <td className="px-4 py-3 font-medium">{r.time}</td>
                   <td className="px-4 py-3">{r.tableLabel}</td>
                   <td className="px-4 py-3">

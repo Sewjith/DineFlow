@@ -29,11 +29,15 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
-      <form className="card w-full max-w-sm space-y-4 p-8" onSubmit={submit}>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 px-4">
+      <div className="absolute -left-20 top-1/4 h-72 w-72 rounded-full bg-brand-600/30 blur-3xl" />
+      <div className="absolute -right-20 bottom-1/4 h-72 w-72 rounded-full bg-brand-500/20 blur-3xl" />
+      <form className="card relative w-full max-w-sm space-y-4 p-8 animate-fade-in" onSubmit={submit}>
         <div className="text-center">
-          <div className="text-3xl">🍽️</div>
-          <h1 className="mt-2 text-xl font-bold text-slate-800">DineFlow Admin</h1>
+          <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-600 text-2xl shadow-lift">
+            🍽️
+          </div>
+          <h1 className="mt-3 font-display text-xl font-extrabold text-slate-900">DineFlow Admin</h1>
           <p className="text-sm text-slate-500">Sign in to manage the restaurant.</p>
         </div>
 

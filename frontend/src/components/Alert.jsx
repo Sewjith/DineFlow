@@ -4,9 +4,20 @@ const styles = {
   info: 'bg-blue-50 text-blue-700 border-blue-200',
 };
 
+const icons = {
+  error: '⚠️',
+  success: '✅',
+  info: 'ℹ️',
+};
+
 export default function Alert({ type = 'info', children }) {
   if (!children) return null;
   return (
-    <div className={`rounded-lg border px-4 py-3 text-sm ${styles[type]}`}>{children}</div>
+    <div
+      className={`flex items-start gap-2.5 rounded-xl border px-4 py-3 text-sm animate-fade-in ${styles[type]}`}
+    >
+      <span className="mt-0.5 shrink-0 leading-none">{icons[type]}</span>
+      <div>{children}</div>
+    </div>
   );
 }

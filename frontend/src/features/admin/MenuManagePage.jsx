@@ -98,7 +98,7 @@ export default function MenuManagePage() {
       {/* Items */}
       <section className="card overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-slate-100 text-left text-slate-600">
+          <thead className="bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">
             <tr>
               <th className="px-4 py-3">Name</th>
               <th className="px-4 py-3">Category</th>
@@ -109,7 +109,7 @@ export default function MenuManagePage() {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {items.map((item) => (
-              <tr key={item.id}>
+              <tr key={item.id} className="transition hover:bg-slate-50/70">
                 <td className="px-4 py-3 font-medium text-slate-800">{item.name}</td>
                 <td className="px-4 py-3 text-slate-500">{item.categoryName}</td>
                 <td className="px-4 py-3">{formatMoney(item.price)}</td>
