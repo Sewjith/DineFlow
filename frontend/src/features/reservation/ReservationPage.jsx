@@ -36,22 +36,21 @@ export default function ReservationPage() {
   };
 
   return (
-    <div className="mx-auto max-w-lg space-y-6">
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-800 to-slate-700 shadow-lift">
+    <div className="mx-auto max-w-lg space-y-8">
+      <div className="overflow-hidden rounded-xl border border-stone-200">
         <img
           src="/menu/hero-reservation.jpg"
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 h-full w-full object-cover opacity-45"
+          alt="Our dining room"
+          className="aspect-[3/1] w-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent" />
-        <div className="relative px-6 py-8">
-          <h1 className="font-display text-2xl font-extrabold text-white">Book a table</h1>
-          <p className="mt-1 text-sm text-white/85">
-            We'll assign a suitable table for your party, if one is free.
-          </p>
-        </div>
       </div>
+      <header>
+        <p className="eyebrow">Reservations</p>
+        <h1 className="mt-2 text-3xl font-semibold text-ink">Book a table</h1>
+        <p className="mt-2 text-sm text-stone-500">
+          We'll assign a suitable table for your party, if one is free.
+        </p>
+      </header>
 
       {result && (
         <Alert type="success">

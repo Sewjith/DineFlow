@@ -1,9 +1,9 @@
 // Menu photos, resolved on the frontend.
 //
-// Image upload is a deferred backend feature, so menu items carry no image URL.
-// To still show appetising photos, we pick a bundled stock photo by matching
-// keywords in the dish name (falling back to its category). The images live in
-// `public/menu/<slug>.jpg` so they load offline with no external dependency.
+// If an item has a photo uploaded by an admin, we serve it from the menu-service
+// (`/api/menu-items/<id>/image`). Otherwise we fall back to a bundled stock photo,
+// picked by matching keywords in the dish name (then its category). The stock images
+// live in `public/menu/<slug>.jpg` so they load offline with no external dependency.
 // Callers pair this with an emoji tile as a last-resort fallback.
 
 const KEYWORDS = [
@@ -42,8 +42,15 @@ function match(item) {
   return CATEGORIES[item?.categoryName] || ['default', '🍽️'];
 }
 
+/** URL of the admin-uploaded photo, or null if the item has none. */
+export function uploadedImageUrl(item) {
+  if (!item?.hasImage) return null;
+  const version = item.imageVersion ? `?v=${item.imageVersion}` : '';
+  return `/api/menu-items/${item.id}/image${version}`;
+}
+
 export function imageFor(item) {
-  return `/menu/${match(item)[0]}.jpg`;
+  return uploadedImageUrl(item) || `/menu/${match(item)[0]}.jpg`;
 }
 
 export function emojiFor(item) {

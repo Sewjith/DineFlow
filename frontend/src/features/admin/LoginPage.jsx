@@ -29,16 +29,13 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 px-4">
-      <div className="absolute -left-20 top-1/4 h-72 w-72 rounded-full bg-brand-600/30 blur-3xl" />
-      <div className="absolute -right-20 bottom-1/4 h-72 w-72 rounded-full bg-brand-500/20 blur-3xl" />
-      <form className="card relative w-full max-w-sm space-y-4 p-8 animate-fade-in" onSubmit={submit}>
+    <div className="flex min-h-screen items-center justify-center px-4">
+      <form className="w-full max-w-sm space-y-6 animate-fade-in" onSubmit={submit}>
         <div className="text-center">
-          <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-600 text-2xl shadow-lift">
-            🍽️
+          <div className="font-display text-2xl font-semibold tracking-tight text-ink">
+            Dineflow<span className="text-brand-500">.</span>
           </div>
-          <h1 className="mt-3 font-display text-xl font-extrabold text-slate-900">DineFlow Admin</h1>
-          <p className="text-sm text-slate-500">Sign in to manage the restaurant.</p>
+          <p className="mt-1 text-sm text-stone-500">Sign in to the admin portal</p>
         </div>
 
         {error && <Alert type="error">{error}</Alert>}
@@ -65,7 +62,7 @@ export default function LoginPage() {
         <button className="btn-primary w-full" disabled={submitting}>
           {submitting ? 'Signing in…' : 'Sign in'}
         </button>
-        <p className="text-center text-xs text-slate-400">Default: admin / admin123</p>
+        <p className="text-center text-xs text-stone-400">Default: admin / admin123</p>
       </form>
     </div>
   );

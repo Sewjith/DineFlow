@@ -24,7 +24,7 @@ export default function CheckoutPage() {
   if (items.length === 0) {
     return (
       <div className="card p-10 text-center">
-        <p className="text-lg font-medium text-slate-700">Nothing to check out</p>
+        <p className="text-lg font-medium text-stone-700">Nothing to check out</p>
         <Link to="/" className="btn-primary mt-4">
           Browse the menu
         </Link>
@@ -57,7 +57,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
-      <h1 className="text-2xl font-bold text-slate-800">Checkout</h1>
+      <h1 className="text-2xl font-bold text-stone-800">Checkout</h1>
 
       <form className="card space-y-4 p-6" onSubmit={submit}>
         {error && <Alert type="error">{error}</Alert>}
@@ -101,8 +101,8 @@ export default function CheckoutPage() {
           </div>
         )}
 
-        <div className="flex items-center justify-between border-t border-slate-100 pt-4">
-          <span className="text-lg font-bold text-slate-800">{formatMoney(total)}</span>
+        <div className="flex items-center justify-between border-t border-stone-100 pt-4">
+          <span className="text-lg font-bold text-stone-800">{formatMoney(total)}</span>
           <button className="btn-primary" disabled={submitting}>
             {submitting ? 'Placing…' : 'Place order'}
           </button>

@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 
 /** A single item on the menu, belonging to one {@link Category}. */
 @Entity
@@ -42,4 +43,20 @@ public class MenuItem {
 
     @Column(nullable = false)
     private boolean available = true;
+
+    /**
+     * MIME type of the uploaded photo, or {@code null} when the item has no photo.
+     * Kept on the item (rather than with the bytes) so lists can tell an image exists
+     * without loading it. The actual bytes live in {@link MenuItemImage}.
+     */
+    @Column(name = "image_content_type")
+    private String imageContentType;
+
+    /** When the photo was last set — used as a cache-busting version for the image URL. */
+    @Column(name = "image_updated_at")
+    private Instant imageUpdatedAt;
+
+    public boolean hasImage() {
+        return imageContentType != null;
+    }
 }

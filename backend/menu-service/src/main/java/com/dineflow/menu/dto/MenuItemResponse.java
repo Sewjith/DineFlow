@@ -12,7 +12,9 @@ public record MenuItemResponse(
         String name,
         String description,
         BigDecimal price,
-        boolean available
+        boolean available,
+        boolean hasImage,
+        Long imageVersion
 ) {
     public static MenuItemResponse fromEntity(MenuItem item) {
         return new MenuItemResponse(
@@ -22,7 +24,9 @@ public record MenuItemResponse(
                 item.getName(),
                 item.getDescription(),
                 item.getPrice(),
-                item.isAvailable()
+                item.isAvailable(),
+                item.hasImage(),
+                item.getImageUpdatedAt() == null ? null : item.getImageUpdatedAt().toEpochMilli()
         );
     }
 }

@@ -49,7 +49,7 @@ export default function ReservationsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-800">Reservations</h1>
+        <h1 className="text-2xl font-bold text-stone-800">Reservations</h1>
         <input className="input max-w-xs" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
       </div>
 
@@ -58,11 +58,11 @@ export default function ReservationsPage() {
       {loading ? (
         <Spinner label="Loading reservations…" />
       ) : reservations.length === 0 ? (
-        <p className="py-10 text-center text-slate-500">No reservations for {date}.</p>
+        <p className="py-10 text-center text-stone-500">No reservations for {date}.</p>
       ) : (
         <div className="card overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            <thead className="bg-stone-50 text-left text-[11px] font-semibold uppercase tracking-wider text-stone-500">
               <tr>
                 <th className="px-4 py-3">Time</th>
                 <th className="px-4 py-3">Table</th>
@@ -72,14 +72,14 @@ export default function ReservationsPage() {
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-stone-100">
               {reservations.map((r) => (
-                <tr key={r.id} className="transition hover:bg-slate-50/70">
+                <tr key={r.id} className="transition hover:bg-stone-50/70">
                   <td className="px-4 py-3 font-medium">{r.time}</td>
                   <td className="px-4 py-3">{r.tableLabel}</td>
                   <td className="px-4 py-3">
                     {r.customerName}
-                    <span className="block text-xs text-slate-400">{r.phone}</span>
+                    <span className="block text-xs text-stone-400">{r.phone}</span>
                   </td>
                   <td className="px-4 py-3">{r.partySize}</td>
                   <td className="px-4 py-3">

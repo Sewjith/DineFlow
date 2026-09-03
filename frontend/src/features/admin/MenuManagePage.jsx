@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { menuApi } from '../../api/menuApi';
 import { toMessage } from '../../api/client';
 import { formatMoney } from '../../lib/format';
+import { imageFor } from '../../lib/foodImages';
 import Spinner from '../../components/Spinner';
 import Alert from '../../components/Alert';
 import MenuItemFormModal from './MenuItemFormModal';
@@ -54,7 +55,7 @@ export default function MenuManagePage() {
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-800">Menu management</h1>
+        <h1 className="text-2xl font-bold text-stone-800">Menu management</h1>
         <button className="btn-primary" onClick={() => setEditing('new')} disabled={categories.length === 0}>
           + New item
         </button>
@@ -64,10 +65,10 @@ export default function MenuManagePage() {
 
       {/* Categories */}
       <section className="card p-5">
-        <h2 className="mb-3 font-semibold text-slate-700">Categories</h2>
+        <h2 className="mb-3 font-semibold text-stone-700">Categories</h2>
         <div className="mb-4 flex flex-wrap gap-2">
           {categories.map((c) => (
-            <span key={c.id} className="badge flex items-center gap-2 bg-slate-100 text-slate-700">
+            <span key={c.id} className="badge flex items-center gap-2 bg-stone-100 text-stone-700">
               {c.name}
               <button
                 className="text-red-500 hover:text-red-700"
@@ -98,7 +99,7 @@ export default function MenuManagePage() {
       {/* Items */}
       <section className="card overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+          <thead className="bg-stone-50 text-left text-[11px] font-semibold uppercase tracking-wider text-stone-500">
             <tr>
               <th className="px-4 py-3">Name</th>
               <th className="px-4 py-3">Category</th>
@@ -107,16 +108,25 @@ export default function MenuManagePage() {
               <th className="px-4 py-3 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-stone-100">
             {items.map((item) => (
-              <tr key={item.id} className="transition hover:bg-slate-50/70">
-                <td className="px-4 py-3 font-medium text-slate-800">{item.name}</td>
-                <td className="px-4 py-3 text-slate-500">{item.categoryName}</td>
+              <tr key={item.id} className="transition hover:bg-stone-50/70">
+                <td className="px-4 py-3 font-medium text-stone-800">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={imageFor(item)}
+                      alt=""
+                      className="h-9 w-9 shrink-0 rounded-md object-cover"
+                    />
+                    {item.name}
+                  </div>
+                </td>
+                <td className="px-4 py-3 text-stone-500">{item.categoryName}</td>
                 <td className="px-4 py-3">{formatMoney(item.price)}</td>
                 <td className="px-4 py-3">
                   <button
                     className={`badge ${
-                      item.available ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-500'
+                      item.available ? 'bg-green-100 text-green-700' : 'bg-stone-200 text-stone-500'
                     }`}
                     onClick={() => act(() => menuApi.setAvailability(item.id, !item.available))}
                     title="Toggle availability"

@@ -2,18 +2,16 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const links = [
-  { to: '/admin', label: 'Dashboard', icon: '📊', end: true },
-  { to: '/admin/menu', label: 'Menu', icon: '🍽️' },
-  { to: '/admin/orders', label: 'Orders', icon: '🧾' },
-  { to: '/admin/kitchen', label: 'Kitchen', icon: '👨‍🍳' },
-  { to: '/admin/reservations', label: 'Reservations', icon: '📅' },
+  { to: '/admin', label: 'Dashboard', end: true },
+  { to: '/admin/menu', label: 'Menu' },
+  { to: '/admin/orders', label: 'Orders' },
+  { to: '/admin/kitchen', label: 'Kitchen' },
+  { to: '/admin/reservations', label: 'Reservations' },
 ];
 
 const linkClass = ({ isActive }) =>
-  `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-    isActive
-      ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-lift'
-      : 'text-slate-300 hover:bg-white/5 hover:text-white'
+  `block rounded-lg px-3 py-2 text-sm transition-colors ${
+    isActive ? 'bg-stone-100 font-medium text-ink' : 'text-stone-500 hover:bg-stone-50 hover:text-ink'
   }`;
 
 export default function AdminLayout() {
@@ -27,34 +25,25 @@ export default function AdminLayout() {
 
   return (
     <div className="flex min-h-screen">
-      <aside className="flex w-60 flex-col bg-slate-900 bg-gradient-to-b from-slate-900 to-slate-950 p-4">
-        <div className="mb-8 flex items-center gap-2 px-1 font-display text-lg font-extrabold text-white">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 text-lg">
-            🍽️
-          </span>
-          <span>
-            Dine<span className="text-brand-400">Flow</span>
-          </span>
+      <aside className="flex w-60 flex-col border-r border-stone-200 bg-white p-5">
+        <div className="mb-9 px-1 font-display text-xl font-semibold tracking-tight text-ink">
+          Dineflow<span className="text-brand-500">.</span>
         </div>
-        <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+        <p className="mb-2 px-3 text-[11px] font-medium uppercase tracking-widest text-stone-400">
           Manage
         </p>
-        <nav className="flex-1 space-y-1">
+        <nav className="flex-1 space-y-0.5">
           {links.map((l) => (
             <NavLink key={l.to} to={l.to} end={l.end} className={linkClass}>
-              <span className="text-base">{l.icon}</span>
               {l.label}
             </NavLink>
           ))}
         </nav>
-        <button
-          className="mt-4 flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/5 hover:text-white"
-          onClick={signOut}
-        >
-          <span>↩</span> Sign out
+        <button className="btn-ghost mt-4" onClick={signOut}>
+          Sign out
         </button>
       </aside>
-      <main className="flex-1 overflow-x-hidden bg-slate-50 p-6 animate-fade-in lg:p-8">
+      <main className="flex-1 overflow-x-hidden bg-paper p-8 animate-fade-in">
         <Outlet />
       </main>
     </div>

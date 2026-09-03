@@ -3,13 +3,15 @@ import Navbar from './Navbar';
 
 export default function CustomerLayout() {
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-b from-brand-50/60 via-slate-50 to-slate-50">
+    <div className="flex min-h-screen flex-col">
       <Navbar />
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 animate-fade-in">
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-12 animate-fade-in">
         <Outlet />
       </main>
-      <footer className="border-t border-slate-200/80 py-6 text-center text-xs text-slate-400">
-        🍽️ DineFlow — fresh food, no waiting.
+      <footer className="border-t border-stone-200">
+        <div className="mx-auto max-w-5xl px-4 py-8 text-sm text-stone-400">
+          Dineflow — fresh food, no waiting.
+        </div>
       </footer>
     </div>
   );
