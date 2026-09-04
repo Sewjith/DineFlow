@@ -172,6 +172,8 @@ export default function ReservationPage() {
             value={form.phone}
             onChange={update('phone')}
             onBlur={errs.blur('phone')}
+            inputMode="numeric"
+            maxLength={10}
           />
           <FieldError>{errs.errors.phone}</FieldError>
         </div>

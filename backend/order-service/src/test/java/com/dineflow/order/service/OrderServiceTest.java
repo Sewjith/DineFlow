@@ -6,11 +6,13 @@ import com.dineflow.order.client.ReservationClient;
 import com.dineflow.order.domain.Order;
 import com.dineflow.order.domain.OrderStatus;
 import com.dineflow.order.domain.OrderType;
+import com.dineflow.order.dto.DashboardResponse;
 import com.dineflow.order.dto.OrderLineRequest;
 import com.dineflow.order.dto.OrderResponse;
 import com.dineflow.order.dto.PlaceOrderRequest;
 import com.dineflow.order.exception.BadRequestException;
 import com.dineflow.order.exception.ConflictException;
+import com.dineflow.order.exception.ResourceNotFoundException;
 import com.dineflow.order.repository.OrderRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -152,6 +155,35 @@ class OrderServiceTest {
         // PLACED cannot jump straight to READY.
         assertThatThrownBy(() -> orderService.updateStatus(5L, OrderStatus.READY))
                 .isInstanceOf(ConflictException.class);
+    }
+
+    @Test
+    void dashboardExcludesCancelledAndSumsTodaysRevenue() {
+        Order active1 = new Order();
+        active1.setStatus(OrderStatus.PLACED);
+        active1.setTotal(new BigDecimal("10.00"));
+        Order active2 = new Order();
+        active2.setStatus(OrderStatus.COMPLETED);
+        active2.setTotal(new BigDecimal("5.50"));
+        Order cancelled = new Order();
+        cancelled.setStatus(OrderStatus.CANCELLED);
+        cancelled.setTotal(new BigDecimal("99.00"));
+        when(orderRepository.findByCreatedAtGreaterThanEqual(any(Instant.class)))
+                .thenReturn(List.of(active1, active2, cancelled));
+
+        DashboardResponse dashboard = orderService.dashboard();
+
+        // Cancelled order is excluded from both count and revenue.
+        assertThat(dashboard.orderCount()).isEqualTo(2);
+        assertThat(dashboard.revenue()).isEqualByComparingTo("15.50");
+    }
+
+    @Test
+    void findByReferenceThrowsWhenMissing() {
+        when(orderRepository.findByReference("ORD-NOPE")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> orderService.findByReference("ORD-NOPE"))
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test

@@ -17,9 +17,8 @@ public record CreateReservationRequest(
         String customerName,
 
         @NotBlank(message = "phone is required")
-        @Size(max = 30, message = "phone must be at most 30 characters")
-        @Pattern(regexp = "^\\+?[0-9()\\-\\s]{7,30}$",
-                message = "phone must be 7-30 characters using digits and + ( ) - spaces")
+        @Pattern(regexp = "^[0-9]{10}$",
+                message = "phone must be exactly 10 digits")
         String phone,
 
         @NotNull(message = "partySize is required")

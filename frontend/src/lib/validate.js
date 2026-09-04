@@ -1,8 +1,8 @@
 // Lightweight client-side validators. These mirror the backend Bean Validation
 // constraints so users get instant feedback; the server remains the source of truth.
 
-// Matches the backend @Pattern on phone: + optional, then 7-30 of digits/() -/space.
-const PHONE_RE = /^\+?[0-9()\-\s]{7,30}$/;
+// Matches the backend @Pattern on phone: exactly 10 digits.
+const PHONE_RE = /^[0-9]{10}$/;
 
 /** Returns an error message, or '' when valid. */
 export function validateName(value, { max = 120 } = {}) {
@@ -12,13 +12,11 @@ export function validateName(value, { max = 120 } = {}) {
   return '';
 }
 
-/** Returns an error message, or '' when valid. Requires at least 7 digits. */
+/** Returns an error message, or '' when valid. Requires exactly 10 digits. */
 export function validatePhone(value) {
   const v = (value ?? '').trim();
   if (!v) return 'Phone is required';
-  if (!PHONE_RE.test(v)) return 'Use 7-30 characters: digits and + ( ) - spaces';
-  const digits = v.replace(/\D/g, '');
-  if (digits.length < 7) return 'Phone must include at least 7 digits';
+  if (!PHONE_RE.test(v)) return 'Phone must be exactly 10 digits';
   return '';
 }
 

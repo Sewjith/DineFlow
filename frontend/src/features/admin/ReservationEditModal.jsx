@@ -84,6 +84,8 @@ export default function ReservationEditModal({ reservation, onClose, onSaved }) 
             value={form.phone}
             onChange={update('phone')}
             onBlur={errs.blur('phone')}
+            inputMode="numeric"
+            maxLength={10}
           />
           <FieldError>{errs.errors.phone}</FieldError>
         </div>

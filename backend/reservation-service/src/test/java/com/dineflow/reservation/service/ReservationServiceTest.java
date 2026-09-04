@@ -218,6 +218,36 @@ class ReservationServiceTest {
     }
 
     @Test
+    void editReassignsWhenCurrentTableStillFitsButIsBusy() {
+        // Party still fits T1 (seats 4), but T1 is now booked for the new window — must move.
+        RestaurantTable current = table(1, "T1", 4);
+        RestaurantTable other = table(2, "T2", 4);
+        when(reservationRepository.findById(7L))
+                .thenReturn(Optional.of(reservation(current, ReservationStatus.CONFIRMED)));
+        when(reservationRepository.hasOverlapExcluding(eq(1L), any(), any(), eq(7L))).thenReturn(true);
+        when(tableRepository.findBySeatsGreaterThanEqualOrderBySeatsAscLabelAsc(3))
+                .thenReturn(List.of(current, other));
+        when(reservationRepository.hasOverlapExcluding(eq(2L), any(), any(), eq(7L))).thenReturn(false);
+
+        ReservationResponse response = reservationService.update(7L, editRequest(3));
+
+        assertThat(response.tableLabel()).isEqualTo("T2");
+    }
+
+    @Test
+    void rejectsEditWhenNoTableIsFreeForTheNewWindow() {
+        RestaurantTable current = table(1, "T1", 4);
+        when(reservationRepository.findById(7L))
+                .thenReturn(Optional.of(reservation(current, ReservationStatus.CONFIRMED)));
+        when(reservationRepository.hasOverlapExcluding(eq(1L), any(), any(), eq(7L))).thenReturn(true);
+        when(tableRepository.findBySeatsGreaterThanEqualOrderBySeatsAscLabelAsc(3))
+                .thenReturn(List.of(current));
+
+        assertThatThrownBy(() -> reservationService.update(7L, editRequest(3)))
+                .isInstanceOf(NoTableAvailableException.class);
+    }
+
+    @Test
     void findByPhoneReturnsBookingsNewestFirstAndTrimsInput() {
         RestaurantTable t = table(1, "T1", 2);
         when(reservationRepository.findByPhoneOrderByReservedAtDesc("0770"))
