@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { orderApi } from '../../api/orderApi';
 import usePolling from '../../hooks/usePolling';
+import useOrderEvents from '../../hooks/useOrderEvents';
 import { toMessage } from '../../api/client';
 import { formatDateTime } from '../../lib/format';
 import { NEXT_STATUS, STATUS_COLOR } from '../../lib/orderStatus';
@@ -14,7 +15,9 @@ export default function KitchenPage() {
     () => orderApi.list().then((all) => all.filter((o) => ACTIVE.includes(o.status))),
     [],
   );
-  const { data: orders, error, loading, refresh } = usePolling(fetchActive, 5000);
+  // Socket.IO drives instant updates; the slow poll is a safety net if the socket drops.
+  const { data: orders, error, loading, refresh } = usePolling(fetchActive, 15000);
+  useOrderEvents(refresh);
 
   const advance = async (order) => {
     const next = NEXT_STATUS[order.status];
@@ -34,7 +37,7 @@ export default function KitchenPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-stone-800">Kitchen</h1>
-          <p className="text-sm text-stone-500">Live active orders · auto-refreshing every 5s.</p>
+          <p className="text-sm text-stone-500">Live active orders · updates in real time.</p>
         </div>
         <span className="flex items-center gap-2 text-sm text-stone-400">
           <span className="h-2 w-2 animate-pulse rounded-full bg-green-500" /> live

@@ -6,6 +6,7 @@ import com.dineflow.order.dto.OrderResponse;
 import com.dineflow.order.dto.PlaceOrderRequest;
 import com.dineflow.order.dto.UpdateStatusRequest;
 import com.dineflow.order.service.OrderService;
+import com.dineflow.order.socket.OrderEventPublisher;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,9 +26,11 @@ import java.util.List;
 public class OrderController {
 
     private final OrderService orderService;
+    private final OrderEventPublisher eventPublisher;
 
-    public OrderController(OrderService orderService) {
+    public OrderController(OrderService orderService, OrderEventPublisher eventPublisher) {
         this.orderService = orderService;
+        this.eventPublisher = eventPublisher;
     }
 
     // --- Public (customer) ---
@@ -35,7 +38,11 @@ public class OrderController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public OrderResponse place(@Valid @RequestBody PlaceOrderRequest request) {
-        return orderService.placeOrder(request);
+        // The service's @Transactional method has committed by the time it returns,
+        // so broadcasting here means clients never see an order that isn't persisted.
+        OrderResponse order = orderService.placeOrder(request);
+        eventPublisher.broadcastOrderChanged(order);
+        return order;
     }
 
     @GetMapping("/reference/{reference}")
@@ -63,6 +70,8 @@ public class OrderController {
     @PatchMapping("/{id}/status")
     public OrderResponse updateStatus(@PathVariable Long id,
                                       @Valid @RequestBody UpdateStatusRequest request) {
-        return orderService.updateStatus(id, request.status());
+        OrderResponse order = orderService.updateStatus(id, request.status());
+        eventPublisher.broadcastOrderChanged(order);
+        return order;
     }
 }

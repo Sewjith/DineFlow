@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { orderApi } from '../../api/orderApi';
+import useOrderEvents from '../../hooks/useOrderEvents';
 import { toMessage } from '../../api/client';
 import { formatMoney, formatDateTime } from '../../lib/format';
 import { ORDER_STATUSES, STATUS_COLOR, NEXT_STATUS, NEXT_STATUS_LABEL } from '../../lib/orderStatus';
@@ -13,7 +14,7 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       setOrders(await orderApi.list(statusFilter || undefined));
@@ -23,12 +24,14 @@ export default function OrdersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter]);
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter]);
+  }, [load]);
+
+  // Refresh live whenever an order is placed or changes status elsewhere.
+  useOrderEvents(load);
 
   const changeStatus = async (id, status) => {
     try {

@@ -44,6 +44,9 @@ services:
     environment:
       <<: *db-env
       MENU_SERVICE_URL: http://menu-service:8081
+      # Socket.IO server for live admin updates; reached internally by the frontend nginx.
+      SOCKETIO_HOST: 0.0.0.0
+      SOCKETIO_PORT: 9092
     depends_on:
       postgres:
         condition: service_healthy
