@@ -78,7 +78,6 @@ export default function LoginPage() {
         <button className="btn-primary w-full" disabled={submitting}>
           {submitting ? 'Signing in…' : 'Sign in'}
         </button>
-        <p className="text-center text-xs text-stone-400">Default: admin / admin123</p>
       </form>
     </div>
   );

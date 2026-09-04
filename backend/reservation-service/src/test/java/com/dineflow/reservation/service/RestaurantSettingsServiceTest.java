@@ -1,10 +1,10 @@
 package com.dineflow.reservation.service;
 
 import com.dineflow.reservation.domain.RestaurantSettings;
-import com.dineflow.reservation.dto.SettingsRequest;
-import com.dineflow.reservation.dto.SettingsResponse;
-import com.dineflow.reservation.exception.BadRequestException;
-import com.dineflow.reservation.repository.RestaurantSettingsRepository;
+import com.dineflow.reservation.web.SettingsRequest;
+import com.dineflow.reservation.web.SettingsResponse;
+import com.dineflow.reservation.domain.BadRequestException;
+import com.dineflow.reservation.infra.RestaurantSettingsRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

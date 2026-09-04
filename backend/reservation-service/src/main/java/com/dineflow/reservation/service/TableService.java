@@ -2,12 +2,12 @@ package com.dineflow.reservation.service;
 
 import com.dineflow.reservation.domain.ReservationStatus;
 import com.dineflow.reservation.domain.RestaurantTable;
-import com.dineflow.reservation.dto.TableRequest;
-import com.dineflow.reservation.dto.TableResponse;
-import com.dineflow.reservation.exception.ConflictException;
-import com.dineflow.reservation.exception.ResourceNotFoundException;
-import com.dineflow.reservation.repository.ReservationRepository;
-import com.dineflow.reservation.repository.RestaurantTableRepository;
+import com.dineflow.reservation.web.TableRequest;
+import com.dineflow.reservation.web.TableResponse;
+import com.dineflow.reservation.domain.ConflictException;
+import com.dineflow.reservation.domain.ResourceNotFoundException;
+import com.dineflow.reservation.infra.ReservationRepository;
+import com.dineflow.reservation.infra.RestaurantTableRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -1,20 +1,20 @@
 package com.dineflow.order.service;
 
-import com.dineflow.order.client.MenuClient;
-import com.dineflow.order.client.MenuItemDto;
-import com.dineflow.order.client.ReservationClient;
+import com.dineflow.order.infra.MenuClient;
+import com.dineflow.order.infra.MenuItemDto;
+import com.dineflow.order.infra.ReservationClient;
 import com.dineflow.order.domain.Order;
 import com.dineflow.order.domain.OrderItem;
 import com.dineflow.order.domain.OrderStatus;
 import com.dineflow.order.domain.OrderType;
-import com.dineflow.order.dto.DashboardResponse;
-import com.dineflow.order.dto.OrderLineRequest;
-import com.dineflow.order.dto.OrderResponse;
-import com.dineflow.order.dto.PlaceOrderRequest;
-import com.dineflow.order.exception.BadRequestException;
-import com.dineflow.order.exception.ConflictException;
-import com.dineflow.order.exception.ResourceNotFoundException;
-import com.dineflow.order.repository.OrderRepository;
+import com.dineflow.order.web.DashboardResponse;
+import com.dineflow.order.web.OrderLineRequest;
+import com.dineflow.order.web.OrderResponse;
+import com.dineflow.order.web.PlaceOrderRequest;
+import com.dineflow.order.domain.BadRequestException;
+import com.dineflow.order.domain.ConflictException;
+import com.dineflow.order.domain.ResourceNotFoundException;
+import com.dineflow.order.infra.OrderRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -176,3 +176,4 @@ public class OrderService {
         return sb.toString();
     }
 }
+

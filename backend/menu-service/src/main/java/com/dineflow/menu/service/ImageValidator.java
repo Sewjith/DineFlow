@@ -1,6 +1,6 @@
 package com.dineflow.menu.service;
 
-import com.dineflow.menu.exception.InvalidImageException;
+import com.dineflow.menu.domain.InvalidImageException;
 
 /**
  * Decides the real type of an uploaded photo from its leading bytes (the "magic number"),
