@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { orderApi } from '../../api/orderApi';
 import usePolling from '../../hooks/usePolling';
+import useOrderEvents from '../../hooks/useOrderEvents';
 import { toMessage } from '../../api/client';
 import { formatDateTime } from '../../lib/format';
 import { NEXT_STATUS, STATUS_COLOR } from '../../lib/orderStatus';
@@ -14,7 +15,9 @@ export default function KitchenPage() {
     () => orderApi.list().then((all) => all.filter((o) => ACTIVE.includes(o.status))),
     [],
   );
-  const { data: orders, error, loading, refresh } = usePolling(fetchActive, 5000);
+  // Socket.IO drives instant updates; the slow poll is a safety net if the socket drops.
+  const { data: orders, error, loading, refresh } = usePolling(fetchActive, 15000);
+  useOrderEvents(refresh);
 
   const advance = async (order) => {
     const next = NEXT_STATUS[order.status];
@@ -33,10 +36,10 @@ export default function KitchenPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Kitchen</h1>
-          <p className="text-sm text-slate-500">Live active orders · auto-refreshing every 5s.</p>
+          <h1 className="text-2xl font-bold text-stone-800">Kitchen</h1>
+          <p className="text-sm text-stone-500">Live active orders · updates in real time.</p>
         </div>
-        <span className="flex items-center gap-2 text-sm text-slate-400">
+        <span className="flex items-center gap-2 text-sm text-stone-400">
           <span className="h-2 w-2 animate-pulse rounded-full bg-green-500" /> live
         </span>
       </div>
@@ -44,7 +47,7 @@ export default function KitchenPage() {
       {error && <Alert type="error">{toMessage(error, 'Failed to load orders')}</Alert>}
 
       {orders && orders.length === 0 ? (
-        <p className="py-10 text-center text-slate-500">No active orders. All caught up! 🎉</p>
+        <p className="py-10 text-center text-stone-500">No active orders. All caught up! 🎉</p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {orders?.map((order) => (
@@ -53,11 +56,11 @@ export default function KitchenPage() {
                 <span className="font-mono font-semibold">{order.reference}</span>
                 <span className={`badge ${STATUS_COLOR[order.status]}`}>{order.status}</span>
               </div>
-              <p className="mt-1 text-xs text-slate-500">
-                {order.orderType === 'DINE_IN' ? `Dine-in · Table ${order.tableNumber}` : 'Takeaway'} ·{' '}
+              <p className="mt-1 text-xs text-stone-500">
+                {order.orderType === 'DINE_IN' ? `Dine-in · ${order.tableLabel}` : 'Takeaway'} ·{' '}
                 {formatDateTime(order.createdAt)}
               </p>
-              <div className="mt-3 flex-1 space-y-1 border-t border-slate-100 pt-3 text-sm">
+              <div className="mt-3 flex-1 space-y-1 border-t border-stone-100 pt-3 text-sm">
                 {order.items.map((item) => (
                   <div key={item.menuItemId} className="flex justify-between">
                     <span className="font-medium">

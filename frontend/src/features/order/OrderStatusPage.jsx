@@ -6,13 +6,14 @@ import { formatMoney, formatDateTime } from '../../lib/format';
 import Alert from '../../components/Alert';
 
 const STATUS_STEPS = ['PLACED', 'CONFIRMED', 'PREPARING', 'READY', 'COMPLETED'];
+const TERMINAL = ['COMPLETED', 'CANCELLED'];
 
 const badgeColor = {
   PLACED: 'bg-blue-100 text-blue-700',
   CONFIRMED: 'bg-indigo-100 text-indigo-700',
   PREPARING: 'bg-amber-100 text-amber-700',
   READY: 'bg-green-100 text-green-700',
-  COMPLETED: 'bg-slate-200 text-slate-600',
+  COMPLETED: 'bg-stone-200 text-stone-600',
   CANCELLED: 'bg-red-100 text-red-700',
 };
 
@@ -45,6 +46,22 @@ export default function OrderStatusPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Live updates: while an order is showing and not in a terminal state, re-fetch
+  // quietly every few seconds so the customer sees the kitchen advance it.
+  useEffect(() => {
+    if (!order || TERMINAL.includes(order.status)) return;
+    const ref = order.reference;
+    const id = setInterval(async () => {
+      try {
+        const fresh = await orderApi.getByReference(ref);
+        setOrder((prev) => (prev && prev.reference === ref ? fresh : prev));
+      } catch {
+        // Ignore transient errors; keep showing the last known status.
+      }
+    }, 8000);
+    return () => clearInterval(id);
+  }, [order?.reference, order?.status]);
+
   const submit = (e) => {
     e.preventDefault();
     setParams(reference ? { ref: reference } : {});
@@ -54,8 +71,8 @@ export default function OrderStatusPage() {
   return (
     <div className="mx-auto max-w-lg space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-800">Track your order</h1>
-        <p className="text-sm text-slate-500">Enter your order reference to see its status.</p>
+        <h1 className="text-2xl font-bold text-stone-800">Track your order</h1>
+        <p className="text-sm text-stone-500">Enter your order reference to see its status.</p>
       </div>
 
       <form className="flex gap-2" onSubmit={submit}>
@@ -82,10 +99,18 @@ export default function OrderStatusPage() {
           )}
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-500">Reference</p>
+              <p className="text-sm text-stone-500">Reference</p>
               <p className="font-mono text-lg font-bold">{order.reference}</p>
             </div>
-            <span className={`badge ${badgeColor[order.status]}`}>{order.status}</span>
+            <div className="flex flex-col items-end gap-1">
+              <span className={`badge ${badgeColor[order.status]}`}>{order.status}</span>
+              {!TERMINAL.includes(order.status) && (
+                <span className="flex items-center gap-1 text-[11px] text-stone-400">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" />
+                  Updating live
+                </span>
+              )}
+            </div>
           </div>
 
           {order.status !== 'CANCELLED' && (
@@ -95,16 +120,16 @@ export default function OrderStatusPage() {
                 return (
                   <div key={step} className="flex flex-1 flex-col items-center gap-1">
                     <div
-                      className={`h-2 w-full rounded-full ${reached ? 'bg-brand-500' : 'bg-slate-200'}`}
+                      className={`h-2 w-full rounded-full ${reached ? 'bg-brand-500' : 'bg-stone-200'}`}
                     />
-                    <span className="text-[10px] text-slate-500">{step}</span>
+                    <span className="text-[10px] text-stone-500">{step}</span>
                   </div>
                 );
               })}
             </div>
           )}
 
-          <div className="divide-y divide-slate-100 border-t border-slate-100 pt-2">
+          <div className="divide-y divide-stone-100 border-t border-stone-100 pt-2">
             {order.items.map((item) => (
               <div key={item.menuItemId} className="flex justify-between py-2 text-sm">
                 <span>
@@ -115,12 +140,12 @@ export default function OrderStatusPage() {
             ))}
           </div>
 
-          <div className="flex justify-between border-t border-slate-100 pt-3 font-semibold">
+          <div className="flex justify-between border-t border-stone-100 pt-3 font-semibold">
             <span>Total</span>
             <span>{formatMoney(order.total)}</span>
           </div>
-          <p className="text-xs text-slate-400">
-            {order.orderType === 'DINE_IN' ? `Dine-in · Table ${order.tableNumber}` : 'Takeaway'} ·
+          <p className="text-xs text-stone-400">
+            {order.orderType === 'DINE_IN' ? `Dine-in · ${order.tableLabel}` : 'Takeaway'} ·
             Placed {formatDateTime(order.createdAt)}
           </p>
         </div>

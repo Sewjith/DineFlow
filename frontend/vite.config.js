@@ -11,6 +11,18 @@ export default defineConfig({
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
+      // Live order updates: forward the Socket.IO handshake + websocket to order-service.
+      '/socket.io': {
+        target: 'http://localhost:9092',
+        changeOrigin: true,
+        ws: true,
+      },
+      // Live reservation updates: separate Socket.IO server on reservation-service.
+      '/rsocket.io': {
+        target: 'http://localhost:9093',
+        changeOrigin: true,
+        ws: true,
+      },
     },
   },
 });

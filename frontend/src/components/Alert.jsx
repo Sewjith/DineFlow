@@ -1,7 +1,7 @@
 const styles = {
-  error: 'bg-red-50 text-red-700 border-red-200',
-  success: 'bg-green-50 text-green-700 border-green-200',
-  info: 'bg-blue-50 text-blue-700 border-blue-200',
+  error: 'border-red-200 bg-red-50 text-red-800',
+  success: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+  info: 'border-stone-200 bg-stone-50 text-stone-700',
 };
 
 export default function Alert({ type = 'info', children }) {

@@ -16,6 +16,11 @@ spring:
   sql:
     init:
       mode: always
+  servlet:
+    multipart:
+      # Photo uploads: reject anything larger before it reaches the service.
+      max-file-size: 2MB
+      max-request-size: 2MB
 
 server:
   port: ${SERVER_PORT:8081}

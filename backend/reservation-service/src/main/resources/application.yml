@@ -25,6 +25,14 @@ app:
   jwt:
     secret: ${JWT_SECRET:dev-local-secret-please-change-me-32chars-min}
 
+# Standalone Socket.IO server (separate from the Tomcat port above). The frontend reaches it
+# via a same-origin /rsocket.io proxy — a distinct path/context from order-service's /socket.io —
+# so this port isn't published to the host.
+socketio:
+  host: ${SOCKETIO_HOST:0.0.0.0}
+  port: ${SOCKETIO_PORT:9093}
+  context: ${SOCKETIO_CONTEXT:/rsocket.io}
+
 logging:
   level:
     org.hibernate.SQL: info

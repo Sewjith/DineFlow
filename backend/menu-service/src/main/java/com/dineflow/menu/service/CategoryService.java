@@ -1,12 +1,12 @@
 package com.dineflow.menu.service;
 
 import com.dineflow.menu.domain.Category;
-import com.dineflow.menu.dto.CategoryRequest;
-import com.dineflow.menu.dto.CategoryResponse;
-import com.dineflow.menu.exception.DuplicateResourceException;
-import com.dineflow.menu.exception.ResourceNotFoundException;
-import com.dineflow.menu.repository.CategoryRepository;
-import com.dineflow.menu.repository.MenuItemRepository;
+import com.dineflow.menu.web.CategoryRequest;
+import com.dineflow.menu.web.CategoryResponse;
+import com.dineflow.menu.domain.DuplicateResourceException;
+import com.dineflow.menu.domain.ResourceNotFoundException;
+import com.dineflow.menu.infra.CategoryRepository;
+import com.dineflow.menu.infra.MenuItemRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

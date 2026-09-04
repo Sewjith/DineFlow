@@ -16,4 +16,11 @@ export const menuApi = {
   setAvailability: (id, available) =>
     client.patch(`/menu-items/${id}/availability`, { available }).then((r) => r.data),
   deleteItem: (id) => client.delete(`/menu-items/${id}`),
+
+  uploadItemImage: (id, file) => {
+    const data = new FormData();
+    data.append('file', file);
+    return client.post(`/menu-items/${id}/image`, data).then((r) => r.data);
+  },
+  deleteItemImage: (id) => client.delete(`/menu-items/${id}/image`).then((r) => r.data),
 };

@@ -1,16 +1,19 @@
 package com.dineflow.order.service;
 
-import com.dineflow.order.client.MenuClient;
-import com.dineflow.order.client.MenuItemDto;
+import com.dineflow.order.infra.MenuClient;
+import com.dineflow.order.infra.MenuItemDto;
+import com.dineflow.order.infra.ReservationClient;
 import com.dineflow.order.domain.Order;
 import com.dineflow.order.domain.OrderStatus;
 import com.dineflow.order.domain.OrderType;
-import com.dineflow.order.dto.OrderLineRequest;
-import com.dineflow.order.dto.OrderResponse;
-import com.dineflow.order.dto.PlaceOrderRequest;
-import com.dineflow.order.exception.BadRequestException;
-import com.dineflow.order.exception.ConflictException;
-import com.dineflow.order.repository.OrderRepository;
+import com.dineflow.order.web.DashboardResponse;
+import com.dineflow.order.web.OrderLineRequest;
+import com.dineflow.order.web.OrderResponse;
+import com.dineflow.order.web.PlaceOrderRequest;
+import com.dineflow.order.domain.BadRequestException;
+import com.dineflow.order.domain.ConflictException;
+import com.dineflow.order.domain.ResourceNotFoundException;
+import com.dineflow.order.infra.OrderRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -18,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,6 +37,8 @@ class OrderServiceTest {
     private OrderRepository orderRepository;
     @Mock
     private MenuClient menuClient;
+    @Mock
+    private ReservationClient reservationClient;
     @InjectMocks
     private OrderService orderService;
 
@@ -60,13 +66,41 @@ class OrderServiceTest {
     }
 
     @Test
-    void rejectsDineInWithoutTableNumber() {
+    void rejectsDineInWithoutTableLabel() {
         PlaceOrderRequest request = new PlaceOrderRequest("Bob", "0770", OrderType.DINE_IN, null,
                 List.of(new OrderLineRequest(1L, 1)));
 
         assertThatThrownBy(() -> orderService.placeOrder(request))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("tableNumber");
+                .hasMessageContaining("tableLabel");
+    }
+
+    @Test
+    void rejectsDineInWithUnknownTable() {
+        when(reservationClient.tableExists("T9")).thenReturn(false);
+
+        PlaceOrderRequest request = new PlaceOrderRequest("Bea", "0770", OrderType.DINE_IN, "T9",
+                List.of(new OrderLineRequest(1L, 1)));
+
+        assertThatThrownBy(() -> orderService.placeOrder(request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("does not exist");
+    }
+
+    @Test
+    void placesDineInWithValidTable() {
+        stubSaveAndReference();
+        when(reservationClient.tableExists("T3")).thenReturn(true);
+        when(menuClient.findItem(1L))
+                .thenReturn(Optional.of(new MenuItemDto(1L, "Pizza", new BigDecimal("9.50"), true)));
+
+        PlaceOrderRequest request = new PlaceOrderRequest("Bob", "0770", OrderType.DINE_IN, "T3",
+                List.of(new OrderLineRequest(1L, 1)));
+
+        OrderResponse response = orderService.placeOrder(request);
+
+        assertThat(response.tableLabel()).isEqualTo("T3");
+        assertThat(response.status()).isEqualTo(OrderStatus.PLACED);
     }
 
     @Test
@@ -94,6 +128,25 @@ class OrderServiceTest {
     }
 
     @Test
+    void findsOrderHistoryByPhone() {
+        Order order = new Order();
+        order.setReference("ORD-ABC123");
+        order.setPhone("0770");
+        when(orderRepository.findByPhoneOrderByCreatedAtDesc("0770")).thenReturn(List.of(order));
+
+        List<OrderResponse> history = orderService.findByPhone("  0770  ");
+
+        assertThat(history).hasSize(1);
+        assertThat(history.get(0).reference()).isEqualTo("ORD-ABC123");
+    }
+
+    @Test
+    void rejectsBlankPhoneLookup() {
+        assertThatThrownBy(() -> orderService.findByPhone("  "))
+                .isInstanceOf(BadRequestException.class);
+    }
+
+    @Test
     void rejectsInvalidStatusTransition() {
         Order order = new Order();
         order.setStatus(OrderStatus.PLACED);
@@ -102,6 +155,35 @@ class OrderServiceTest {
         // PLACED cannot jump straight to READY.
         assertThatThrownBy(() -> orderService.updateStatus(5L, OrderStatus.READY))
                 .isInstanceOf(ConflictException.class);
+    }
+
+    @Test
+    void dashboardExcludesCancelledAndSumsTodaysRevenue() {
+        Order active1 = new Order();
+        active1.setStatus(OrderStatus.PLACED);
+        active1.setTotal(new BigDecimal("10.00"));
+        Order active2 = new Order();
+        active2.setStatus(OrderStatus.COMPLETED);
+        active2.setTotal(new BigDecimal("5.50"));
+        Order cancelled = new Order();
+        cancelled.setStatus(OrderStatus.CANCELLED);
+        cancelled.setTotal(new BigDecimal("99.00"));
+        when(orderRepository.findByCreatedAtGreaterThanEqual(any(Instant.class)))
+                .thenReturn(List.of(active1, active2, cancelled));
+
+        DashboardResponse dashboard = orderService.dashboard();
+
+        // Cancelled order is excluded from both count and revenue.
+        assertThat(dashboard.orderCount()).isEqualTo(2);
+        assertThat(dashboard.revenue()).isEqualByComparingTo("15.50");
+    }
+
+    @Test
+    void findByReferenceThrowsWhenMissing() {
+        when(orderRepository.findByReference("ORD-NOPE")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> orderService.findByReference("ORD-NOPE"))
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test

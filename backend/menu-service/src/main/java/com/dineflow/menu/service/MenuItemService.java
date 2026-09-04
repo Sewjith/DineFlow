@@ -2,15 +2,22 @@ package com.dineflow.menu.service;
 
 import com.dineflow.menu.domain.Category;
 import com.dineflow.menu.domain.MenuItem;
-import com.dineflow.menu.dto.AvailabilityRequest;
-import com.dineflow.menu.dto.MenuItemRequest;
-import com.dineflow.menu.dto.MenuItemResponse;
-import com.dineflow.menu.exception.ResourceNotFoundException;
-import com.dineflow.menu.repository.CategoryRepository;
-import com.dineflow.menu.repository.MenuItemRepository;
+import com.dineflow.menu.domain.MenuItemImage;
+import com.dineflow.menu.web.AvailabilityRequest;
+import com.dineflow.menu.web.MenuImage;
+import com.dineflow.menu.web.MenuItemRequest;
+import com.dineflow.menu.web.MenuItemResponse;
+import com.dineflow.menu.domain.InvalidImageException;
+import com.dineflow.menu.domain.ResourceNotFoundException;
+import com.dineflow.menu.infra.CategoryRepository;
+import com.dineflow.menu.infra.MenuItemImageRepository;
+import com.dineflow.menu.infra.MenuItemRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -19,11 +26,14 @@ public class MenuItemService {
 
     private final MenuItemRepository menuItemRepository;
     private final CategoryRepository categoryRepository;
+    private final MenuItemImageRepository menuItemImageRepository;
 
     public MenuItemService(MenuItemRepository menuItemRepository,
-                           CategoryRepository categoryRepository) {
+                           CategoryRepository categoryRepository,
+                           MenuItemImageRepository menuItemImageRepository) {
         this.menuItemRepository = menuItemRepository;
         this.categoryRepository = categoryRepository;
+        this.menuItemImageRepository = menuItemImageRepository;
     }
 
     @Transactional(readOnly = true)
@@ -62,7 +72,52 @@ public class MenuItemService {
     }
 
     public void delete(Long id) {
-        menuItemRepository.delete(getItem(id));
+        MenuItem item = getItem(id);
+        if (item.hasImage()) {
+            menuItemImageRepository.deleteById(id);
+        }
+        menuItemRepository.delete(item);
+    }
+
+    /** Stores (or replaces) the item's photo after validating it is a real JPEG/PNG/WebP. */
+    public MenuItemResponse setImage(Long id, MultipartFile file) {
+        MenuItem item = getItem(id);
+        byte[] bytes = readBytes(file);
+        String contentType = ImageValidator.detectContentType(bytes);
+
+        menuItemImageRepository.save(new MenuItemImage(id, contentType, bytes));
+        item.setImageContentType(contentType);
+        item.setImageUpdatedAt(Instant.now());
+        return MenuItemResponse.fromEntity(item);
+    }
+
+    /** Removes the item's photo, if any. Idempotent. */
+    public MenuItemResponse deleteImage(Long id) {
+        MenuItem item = getItem(id);
+        if (item.hasImage()) {
+            menuItemImageRepository.deleteById(id);
+            item.setImageContentType(null);
+            item.setImageUpdatedAt(null);
+        }
+        return MenuItemResponse.fromEntity(item);
+    }
+
+    @Transactional(readOnly = true)
+    public MenuImage getImage(Long id) {
+        return menuItemImageRepository.findById(id)
+                .map(img -> new MenuImage(img.getContentType(), img.getData()))
+                .orElseThrow(() -> ResourceNotFoundException.of("Menu item image", id));
+    }
+
+    private byte[] readBytes(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new InvalidImageException("Image file is required");
+        }
+        try {
+            return file.getBytes();
+        } catch (IOException e) {
+            throw new InvalidImageException("Could not read the uploaded image");
+        }
     }
 
     private void apply(MenuItem item, MenuItemRequest request, Category category) {

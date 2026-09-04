@@ -20,10 +20,20 @@ server:
 menu-service:
   url: ${MENU_SERVICE_URL:http://localhost:8081}
 
+# Base URL of reservation-service, used to validate the dine-in table label.
+reservation-service:
+  url: ${RESERVATION_SERVICE_URL:http://localhost:8083}
+
 # Shared JWT secret — must match the gateway's app.jwt.secret.
 app:
   jwt:
     secret: ${JWT_SECRET:dev-local-secret-please-change-me-32chars-min}
+
+# Standalone Socket.IO server (separate from the Tomcat port above). The frontend
+# reaches it via a same-origin /socket.io proxy, so this port isn't published to the host.
+socketio:
+  host: ${SOCKETIO_HOST:0.0.0.0}
+  port: ${SOCKETIO_PORT:9092}
 
 logging:
   level:
