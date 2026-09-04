@@ -1,25 +1,49 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
+import useCartReconcile from '../../hooks/useCartReconcile';
 import { orderApi } from '../../api/orderApi';
+import { tableApi } from '../../api/tableApi';
 import { toMessage } from '../../api/client';
 import { formatMoney } from '../../lib/format';
+import { validateName, validatePhone, fieldClass } from '../../lib/validate';
+import useFieldErrors from '../../hooks/useFieldErrors';
 import Alert from '../../components/Alert';
+import FieldError from '../../components/FieldError';
 
 export default function CheckoutPage() {
-  const { items, total, clear } = useCart();
+  const { items, total, clear, hasUnavailable } = useCart();
   const navigate = useNavigate();
+  useCartReconcile();
 
   const [form, setForm] = useState({
     customerName: '',
     phone: '',
     orderType: 'DINE_IN',
-    tableNumber: '',
+    tableLabel: '',
   });
+  const [tables, setTables] = useState([]);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const update = (field) => (e) => setForm({ ...form, [field]: e.target.value });
+  const errs = useFieldErrors({
+    customerName: () => validateName(form.customerName),
+    phone: () => validatePhone(form.phone),
+    tableLabel: () =>
+      form.orderType === 'DINE_IN' && !form.tableLabel ? 'Please select a table' : '',
+  });
+
+  useEffect(() => {
+    tableApi
+      .list()
+      .then(setTables)
+      .catch(() => setTables([]));
+  }, []);
+
+  const update = (field) => (e) => {
+    setForm({ ...form, [field]: e.target.value });
+    errs.clear(field);
+  };
 
   if (items.length === 0) {
     return (
@@ -34,6 +58,11 @@ export default function CheckoutPage() {
 
   const submit = async (e) => {
     e.preventDefault();
+    if (hasUnavailable) {
+      setError('Some items are no longer available. Please review your cart before checking out.');
+      return;
+    }
+    if (!errs.validateAll()) return;
     setSubmitting(true);
     setError('');
     try {
@@ -41,8 +70,7 @@ export default function CheckoutPage() {
         customerName: form.customerName,
         phone: form.phone,
         orderType: form.orderType,
-        tableNumber:
-          form.orderType === 'DINE_IN' && form.tableNumber ? Number(form.tableNumber) : null,
+        tableLabel: form.orderType === 'DINE_IN' ? form.tableLabel || null : null,
         items: items.map((i) => ({ menuItemId: i.menuItemId, quantity: i.quantity })),
       };
       const order = await orderApi.place(payload);
@@ -59,16 +87,38 @@ export default function CheckoutPage() {
     <div className="mx-auto max-w-lg space-y-6">
       <h1 className="text-2xl font-bold text-stone-800">Checkout</h1>
 
-      <form className="card space-y-4 p-6" onSubmit={submit}>
+      {hasUnavailable && (
+        <Alert type="error">
+          Some items are no longer available.{' '}
+          <Link to="/cart" className="font-medium underline">
+            Review your cart
+          </Link>{' '}
+          to continue.
+        </Alert>
+      )}
+
+      <form className="card space-y-4 p-6" onSubmit={submit} noValidate>
         {error && <Alert type="error">{error}</Alert>}
 
         <div>
           <label className="label">Name</label>
-          <input className="input" required value={form.customerName} onChange={update('customerName')} />
+          <input
+            className={fieldClass(errs.errors.customerName)}
+            value={form.customerName}
+            onChange={update('customerName')}
+            onBlur={errs.blur('customerName')}
+          />
+          <FieldError>{errs.errors.customerName}</FieldError>
         </div>
         <div>
           <label className="label">Phone</label>
-          <input className="input" required value={form.phone} onChange={update('phone')} />
+          <input
+            className={fieldClass(errs.errors.phone)}
+            value={form.phone}
+            onChange={update('phone')}
+            onBlur={errs.blur('phone')}
+          />
+          <FieldError>{errs.errors.phone}</FieldError>
         </div>
 
         <div>
@@ -89,21 +139,36 @@ export default function CheckoutPage() {
 
         {form.orderType === 'DINE_IN' && (
           <div>
-            <label className="label">Table number</label>
-            <input
-              className="input"
-              type="number"
-              min="1"
-              required
-              value={form.tableNumber}
-              onChange={update('tableNumber')}
-            />
+            <label className="label">Table</label>
+            {tables.length === 0 ? (
+              <p className="text-sm text-stone-500">No tables are configured — please choose Takeaway.</p>
+            ) : (
+              <select
+                className={fieldClass(errs.errors.tableLabel)}
+                value={form.tableLabel}
+                onChange={update('tableLabel')}
+                onBlur={errs.blur('tableLabel')}
+              >
+                <option value="" disabled>
+                  Select a table…
+                </option>
+                {tables.map((t) => (
+                  <option key={t.id} value={t.label}>
+                    {t.label} · seats {t.seats}
+                  </option>
+                ))}
+              </select>
+            )}
+            <FieldError>{errs.errors.tableLabel}</FieldError>
           </div>
         )}
 
         <div className="flex items-center justify-between border-t border-stone-100 pt-4">
           <span className="text-lg font-bold text-stone-800">{formatMoney(total)}</span>
-          <button className="btn-primary" disabled={submitting}>
+          <button
+            className="btn-primary disabled:pointer-events-none disabled:opacity-40"
+            disabled={submitting || hasUnavailable}
+          >
             {submitting ? 'Placing…' : 'Place order'}
           </button>
         </div>

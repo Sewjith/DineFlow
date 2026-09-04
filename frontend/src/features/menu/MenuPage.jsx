@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { menuApi } from '../../api/menuApi';
 import { toMessage } from '../../api/client';
 import Spinner from '../../components/Spinner';
@@ -19,24 +19,51 @@ export default function MenuPage() {
     menuApi.listCategories().then(setCategories).catch(() => {});
   }, []);
 
-  // Reload items whenever the filters change (server-side search/filter).
-  useEffect(() => {
-    setLoading(true);
-    const params = {};
-    if (categoryId) params.categoryId = categoryId;
-    if (search.trim()) params.search = search.trim();
-    const handle = setTimeout(() => {
-      menuApi
+  // Fetch items for the current filters. `quiet` skips the spinner so background
+  // refreshes (focus / interval) update sold-out state without a visible reload.
+  const load = useCallback(
+    (quiet = false) => {
+      if (!quiet) setLoading(true);
+      const params = {};
+      if (categoryId) params.categoryId = categoryId;
+      if (search.trim()) params.search = search.trim();
+      return menuApi
         .listItems(params)
         .then((data) => {
           setItems(data);
           setError('');
         })
-        .catch((e) => setError(toMessage(e, 'Failed to load the menu')))
-        .finally(() => setLoading(false));
-    }, 250); // debounce typing
+        .catch((e) => {
+          if (!quiet) setError(toMessage(e, 'Failed to load the menu'));
+        })
+        .finally(() => {
+          if (!quiet) setLoading(false);
+        });
+    },
+    [search, categoryId],
+  );
+
+  // Reload whenever the filters change (server-side search/filter), debouncing typing.
+  useEffect(() => {
+    const handle = setTimeout(() => load(), 250);
     return () => clearTimeout(handle);
-  }, [search, categoryId]);
+  }, [load]);
+
+  // Keep availability fresh: quietly refresh when the tab regains focus and every 30s
+  // while it's open, so an admin marking a dish sold-out shows up without a manual reload.
+  useEffect(() => {
+    const onFocus = () => {
+      if (document.visibilityState === 'visible') load(true);
+    };
+    document.addEventListener('visibilitychange', onFocus);
+    window.addEventListener('focus', onFocus);
+    const id = setInterval(() => load(true), 30000);
+    return () => {
+      document.removeEventListener('visibilitychange', onFocus);
+      window.removeEventListener('focus', onFocus);
+      clearInterval(id);
+    };
+  }, [load]);
 
   // Group items by category name for display.
   const grouped = useMemo(() => {

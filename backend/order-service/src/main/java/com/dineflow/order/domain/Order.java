@@ -44,8 +44,8 @@ public class Order {
     @Column(nullable = false)
     private OrderType orderType;
 
-    /** Only set for dine-in orders. */
-    private Integer tableNumber;
+    /** Label of the dine-in table (e.g. "T3"); only set for dine-in orders. */
+    private String tableLabel;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

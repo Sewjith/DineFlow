@@ -23,6 +23,9 @@ export default function Navbar() {
           <NavLink to="/track" className={linkClass}>
             Track order
           </NavLink>
+          <NavLink to="/my-activity" className={linkClass}>
+            My orders &amp; bookings
+          </NavLink>
           <NavLink to="/cart" className={linkClass}>
             Cart
             {count > 0 && <span className="ml-1 text-stone-400">({count})</span>}

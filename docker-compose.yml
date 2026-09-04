@@ -44,18 +44,25 @@ services:
     environment:
       <<: *db-env
       MENU_SERVICE_URL: http://menu-service:8081
+      RESERVATION_SERVICE_URL: http://reservation-service:8083
       # Socket.IO server for live admin updates; reached internally by the frontend nginx.
       SOCKETIO_HOST: 0.0.0.0
       SOCKETIO_PORT: 9092
     depends_on:
       postgres:
         condition: service_healthy
+      reservation-service:
+        condition: service_started
     restart: unless-stopped
 
   reservation-service:
     build: ./backend/reservation-service
     environment:
       <<: *db-env
+      # Socket.IO server for live admin updates; reached internally by the frontend nginx.
+      SOCKETIO_HOST: 0.0.0.0
+      SOCKETIO_PORT: 9093
+      SOCKETIO_CONTEXT: /rsocket.io
     depends_on:
       postgres:
         condition: service_healthy

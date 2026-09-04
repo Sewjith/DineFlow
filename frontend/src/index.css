@@ -49,6 +49,10 @@
            outline-none transition placeholder:text-stone-400
            focus:border-ink focus:ring-1 focus:ring-ink;
   }
+  /* Applied to an .input when its field has a validation error. */
+  .input-error {
+    @apply border-red-400 focus:border-red-500 focus:ring-red-500;
+  }
   .label {
     @apply mb-1.5 block text-sm font-medium text-stone-700;
   }

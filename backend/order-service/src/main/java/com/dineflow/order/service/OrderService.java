@@ -2,6 +2,7 @@ package com.dineflow.order.service;
 
 import com.dineflow.order.client.MenuClient;
 import com.dineflow.order.client.MenuItemDto;
+import com.dineflow.order.client.ReservationClient;
 import com.dineflow.order.domain.Order;
 import com.dineflow.order.domain.OrderItem;
 import com.dineflow.order.domain.OrderStatus;
@@ -34,24 +35,25 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final MenuClient menuClient;
+    private final ReservationClient reservationClient;
     private final SecureRandom random = new SecureRandom();
 
-    public OrderService(OrderRepository orderRepository, MenuClient menuClient) {
+    public OrderService(OrderRepository orderRepository, MenuClient menuClient,
+                        ReservationClient reservationClient) {
         this.orderRepository = orderRepository;
         this.menuClient = menuClient;
+        this.reservationClient = reservationClient;
     }
 
     public OrderResponse placeOrder(PlaceOrderRequest request) {
-        if (request.orderType() == OrderType.DINE_IN && request.tableNumber() == null) {
-            throw new BadRequestException("tableNumber is required for dine-in orders");
-        }
+        String tableLabel = resolveDineInTable(request);
 
         Order order = new Order();
         order.setReference(generateUniqueReference());
         order.setCustomerName(request.customerName());
         order.setPhone(request.phone());
         order.setOrderType(request.orderType());
-        order.setTableNumber(request.orderType() == OrderType.DINE_IN ? request.tableNumber() : null);
+        order.setTableLabel(tableLabel);
         order.setStatus(OrderStatus.PLACED);
 
         BigDecimal total = BigDecimal.ZERO;
@@ -88,6 +90,18 @@ public class OrderService {
         return OrderResponse.fromEntity(getOrder(id));
     }
 
+    /** Customer order history: all orders placed with the given phone, newest first. */
+    @Transactional(readOnly = true)
+    public List<OrderResponse> findByPhone(String phone) {
+        String normalized = phone == null ? "" : phone.trim();
+        if (normalized.isEmpty()) {
+            throw new BadRequestException("phone is required");
+        }
+        return orderRepository.findByPhoneOrderByCreatedAtDesc(normalized).stream()
+                .map(OrderResponse::fromEntity)
+                .toList();
+    }
+
     @Transactional(readOnly = true)
     public List<OrderResponse> findAll(OrderStatus status) {
         List<Order> orders = (status == null)
@@ -119,6 +133,24 @@ public class OrderService {
                 .map(Order::getTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         return new DashboardResponse(today, todaysActive.size(), revenue);
+    }
+
+    /**
+     * For dine-in, requires a table label that names a real table (validated against
+     * reservation-service). Returns the trimmed label, or {@code null} for takeaway.
+     */
+    private String resolveDineInTable(PlaceOrderRequest request) {
+        if (request.orderType() != OrderType.DINE_IN) {
+            return null;
+        }
+        String label = request.tableLabel() == null ? "" : request.tableLabel().trim();
+        if (label.isEmpty()) {
+            throw new BadRequestException("tableLabel is required for dine-in orders");
+        }
+        if (!reservationClient.tableExists(label)) {
+            throw new BadRequestException("Table '" + label + "' does not exist");
+        }
+        return label;
     }
 
     private Order getOrder(Long id) {

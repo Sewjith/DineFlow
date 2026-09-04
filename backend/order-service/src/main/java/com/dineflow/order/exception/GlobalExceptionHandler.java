@@ -1,6 +1,8 @@
 package com.dineflow.order.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -57,6 +59,24 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(),
                 HttpStatus.BAD_REQUEST.getReasonPhrase(),
                 "Validation failed for one or more fields",
+                request.getRequestURI(),
+                fieldErrors);
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException ex,
+                                                                   HttpServletRequest request) {
+        Map<String, String> fieldErrors = new LinkedHashMap<>();
+        for (ConstraintViolation<?> violation : ex.getConstraintViolations()) {
+            String path = violation.getPropertyPath().toString();
+            String field = path.contains(".") ? path.substring(path.lastIndexOf('.') + 1) : path;
+            fieldErrors.putIfAbsent(field, violation.getMessage());
+        }
+        ErrorResponse body = ErrorResponse.validation(
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                "Validation failed for one or more parameters",
                 request.getRequestURI(),
                 fieldErrors);
         return ResponseEntity.badRequest().body(body);

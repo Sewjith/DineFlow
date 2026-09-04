@@ -2,7 +2,10 @@ import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { toMessage } from '../../api/client';
+import { validateRequired, fieldClass } from '../../lib/validate';
+import useFieldErrors from '../../hooks/useFieldErrors';
 import Alert from '../../components/Alert';
+import FieldError from '../../components/FieldError';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -14,8 +17,19 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const errs = useFieldErrors({
+    username: () => validateRequired(form.username, 'Username'),
+    password: () => validateRequired(form.password, 'Password'),
+  });
+
+  const change = (field) => (e) => {
+    setForm({ ...form, [field]: e.target.value });
+    errs.clear(field);
+  };
+
   const submit = async (e) => {
     e.preventDefault();
+    if (!errs.validateAll()) return;
     setSubmitting(true);
     setError('');
     try {
@@ -30,7 +44,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
-      <form className="w-full max-w-sm space-y-6 animate-fade-in" onSubmit={submit}>
+      <form className="w-full max-w-sm space-y-6 animate-fade-in" onSubmit={submit} noValidate>
         <div className="text-center">
           <div className="font-display text-2xl font-semibold tracking-tight text-ink">
             Dineflow<span className="text-brand-500">.</span>
@@ -43,21 +57,23 @@ export default function LoginPage() {
         <div>
           <label className="label">Username</label>
           <input
-            className="input"
-            required
+            className={fieldClass(errs.errors.username)}
             value={form.username}
-            onChange={(e) => setForm({ ...form, username: e.target.value })}
+            onChange={change('username')}
+            onBlur={errs.blur('username')}
           />
+          <FieldError>{errs.errors.username}</FieldError>
         </div>
         <div>
           <label className="label">Password</label>
           <input
-            className="input"
+            className={fieldClass(errs.errors.password)}
             type="password"
-            required
             value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            onChange={change('password')}
+            onBlur={errs.blur('password')}
           />
+          <FieldError>{errs.errors.password}</FieldError>
         </div>
         <button className="btn-primary w-full" disabled={submitting}>
           {submitting ? 'Signing in…' : 'Sign in'}

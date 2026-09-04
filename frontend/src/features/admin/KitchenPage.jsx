@@ -57,7 +57,7 @@ export default function KitchenPage() {
                 <span className={`badge ${STATUS_COLOR[order.status]}`}>{order.status}</span>
               </div>
               <p className="mt-1 text-xs text-stone-500">
-                {order.orderType === 'DINE_IN' ? `Dine-in · Table ${order.tableNumber}` : 'Takeaway'} ·{' '}
+                {order.orderType === 'DINE_IN' ? `Dine-in · ${order.tableLabel}` : 'Takeaway'} ·{' '}
                 {formatDateTime(order.createdAt)}
               </p>
               <div className="mt-3 flex-1 space-y-1 border-t border-stone-100 pt-3 text-sm">

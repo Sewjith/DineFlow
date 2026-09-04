@@ -30,7 +30,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Public: request a table booking.
                         .requestMatchers(HttpMethod.POST, "/reservations").permitAll()
-                        // Everything else (list by date, confirm/cancel) is admin-only.
+                        // Public: customers check their own bookings' status by phone,
+                        // and see which times can seat their party on a date.
+                        .requestMatchers(HttpMethod.GET, "/reservations/history", "/reservations/availability").permitAll()
+                        // Public reads: opening hours (booking page) and the table list
+                        // (checkout dine-in picker + order-service validation).
+                        .requestMatchers(HttpMethod.GET, "/settings", "/tables").permitAll()
+                        // Everything else (list by date, confirm/cancel, table & settings writes) is admin-only.
                         .anyRequest().hasRole("ADMIN"))
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((req, res, e) -> res.sendError(401, "Unauthorized")))

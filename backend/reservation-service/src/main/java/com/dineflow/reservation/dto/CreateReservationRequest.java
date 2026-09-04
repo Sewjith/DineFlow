@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
@@ -17,6 +18,8 @@ public record CreateReservationRequest(
 
         @NotBlank(message = "phone is required")
         @Size(max = 30, message = "phone must be at most 30 characters")
+        @Pattern(regexp = "^\\+?[0-9()\\-\\s]{7,30}$",
+                message = "phone must be 7-30 characters using digits and + ( ) - spaces")
         String phone,
 
         @NotNull(message = "partySize is required")
@@ -30,12 +33,9 @@ public record CreateReservationRequest(
         @NotNull(message = "time is required (HH:mm)")
         LocalTime time,
 
-        /** Optional; defaults to 90 minutes when omitted. */
+        /** Optional; falls back to the restaurant's configured turn-time when omitted. */
         @Min(value = 30, message = "durationMinutes must be at least 30")
         @Max(value = 480, message = "durationMinutes must be at most 480")
         Integer durationMinutes
 ) {
-    public int durationOrDefault() {
-        return durationMinutes == null ? 90 : durationMinutes;
-    }
 }

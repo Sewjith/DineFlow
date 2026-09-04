@@ -20,6 +20,10 @@ server:
 menu-service:
   url: ${MENU_SERVICE_URL:http://localhost:8081}
 
+# Base URL of reservation-service, used to validate the dine-in table label.
+reservation-service:
+  url: ${RESERVATION_SERVICE_URL:http://localhost:8083}
+
 # Shared JWT secret — must match the gateway's app.jwt.secret.
 app:
   jwt:

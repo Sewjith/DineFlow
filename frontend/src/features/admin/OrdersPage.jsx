@@ -74,7 +74,7 @@ export default function OrdersPage() {
                   <p className="font-mono font-semibold text-stone-800">{order.reference}</p>
                   <p className="text-sm text-stone-500">
                     {order.customerName} · {order.phone} ·{' '}
-                    {order.orderType === 'DINE_IN' ? `Dine-in (T${order.tableNumber})` : 'Takeaway'}
+                    {order.orderType === 'DINE_IN' ? `Dine-in (${order.tableLabel})` : 'Takeaway'}
                   </p>
                 </button>
                 <div className="flex items-center gap-3">

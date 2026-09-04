@@ -6,6 +6,7 @@ import { formatMoney, formatDateTime } from '../../lib/format';
 import Alert from '../../components/Alert';
 
 const STATUS_STEPS = ['PLACED', 'CONFIRMED', 'PREPARING', 'READY', 'COMPLETED'];
+const TERMINAL = ['COMPLETED', 'CANCELLED'];
 
 const badgeColor = {
   PLACED: 'bg-blue-100 text-blue-700',
@@ -44,6 +45,22 @@ export default function OrderStatusPage() {
     if (ref) lookup(ref);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Live updates: while an order is showing and not in a terminal state, re-fetch
+  // quietly every few seconds so the customer sees the kitchen advance it.
+  useEffect(() => {
+    if (!order || TERMINAL.includes(order.status)) return;
+    const ref = order.reference;
+    const id = setInterval(async () => {
+      try {
+        const fresh = await orderApi.getByReference(ref);
+        setOrder((prev) => (prev && prev.reference === ref ? fresh : prev));
+      } catch {
+        // Ignore transient errors; keep showing the last known status.
+      }
+    }, 8000);
+    return () => clearInterval(id);
+  }, [order?.reference, order?.status]);
 
   const submit = (e) => {
     e.preventDefault();
@@ -85,7 +102,15 @@ export default function OrderStatusPage() {
               <p className="text-sm text-stone-500">Reference</p>
               <p className="font-mono text-lg font-bold">{order.reference}</p>
             </div>
-            <span className={`badge ${badgeColor[order.status]}`}>{order.status}</span>
+            <div className="flex flex-col items-end gap-1">
+              <span className={`badge ${badgeColor[order.status]}`}>{order.status}</span>
+              {!TERMINAL.includes(order.status) && (
+                <span className="flex items-center gap-1 text-[11px] text-stone-400">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" />
+                  Updating live
+                </span>
+              )}
+            </div>
           </div>
 
           {order.status !== 'CANCELLED' && (
@@ -120,7 +145,7 @@ export default function OrderStatusPage() {
             <span>{formatMoney(order.total)}</span>
           </div>
           <p className="text-xs text-stone-400">
-            {order.orderType === 'DINE_IN' ? `Dine-in · Table ${order.tableNumber}` : 'Takeaway'} ·
+            {order.orderType === 'DINE_IN' ? `Dine-in · ${order.tableLabel}` : 'Takeaway'} ·
             Placed {formatDateTime(order.createdAt)}
           </p>
         </div>

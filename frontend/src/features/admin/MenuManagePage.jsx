@@ -14,6 +14,7 @@ export default function MenuManagePage() {
   const [error, setError] = useState('');
   const [editing, setEditing] = useState(null); // item | 'new' | null
   const [newCategory, setNewCategory] = useState('');
+  const [editingCat, setEditingCat] = useState(null); // { id, name } | null
 
   const load = async () => {
     setLoading(true);
@@ -50,6 +51,13 @@ export default function MenuManagePage() {
     setNewCategory('');
   };
 
+  const saveCategory = async () => {
+    const name = editingCat.name.trim();
+    if (!name) return;
+    await act(() => menuApi.updateCategory(editingCat.id, { name }));
+    setEditingCat(null);
+  };
+
   if (loading) return <Spinner label="Loading menu…" />;
 
   return (
@@ -67,23 +75,51 @@ export default function MenuManagePage() {
       <section className="card p-5">
         <h2 className="mb-3 font-semibold text-stone-700">Categories</h2>
         <div className="mb-4 flex flex-wrap gap-2">
-          {categories.map((c) => (
-            <span key={c.id} className="badge flex items-center gap-2 bg-stone-100 text-stone-700">
-              {c.name}
-              <button
-                className="text-red-500 hover:text-red-700"
-                title="Delete category"
-                onClick={() =>
-                  act(
-                    () => menuApi.deleteCategory(c.id),
-                    `Delete category "${c.name}"? (only works if it has no items)`,
-                  )
-                }
-              >
-                ✕
-              </button>
-            </span>
-          ))}
+          {categories.map((c) =>
+            editingCat?.id === c.id ? (
+              <span key={c.id} className="badge flex items-center gap-1 bg-stone-100">
+                <input
+                  className="w-28 rounded border border-stone-300 bg-white px-1.5 py-0.5 text-sm text-stone-800"
+                  autoFocus
+                  value={editingCat.name}
+                  onChange={(e) => setEditingCat({ ...editingCat, name: e.target.value })}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') saveCategory();
+                    if (e.key === 'Escape') setEditingCat(null);
+                  }}
+                />
+                <button className="text-green-600 hover:text-green-700" title="Save" onClick={saveCategory}>
+                  ✓
+                </button>
+                <button className="text-stone-500 hover:text-stone-700" title="Cancel" onClick={() => setEditingCat(null)}>
+                  ✕
+                </button>
+              </span>
+            ) : (
+              <span key={c.id} className="badge flex items-center gap-2 bg-stone-100 text-stone-700">
+                {c.name}
+                <button
+                  className="text-stone-400 hover:text-ink"
+                  title="Rename category"
+                  onClick={() => setEditingCat({ id: c.id, name: c.name })}
+                >
+                  ✎
+                </button>
+                <button
+                  className="text-red-500 hover:text-red-700"
+                  title="Delete category"
+                  onClick={() =>
+                    act(
+                      () => menuApi.deleteCategory(c.id),
+                      `Delete category "${c.name}"? (only works if it has no items)`,
+                    )
+                  }
+                >
+                  ✕
+                </button>
+              </span>
+            ),
+          )}
         </div>
         <form className="flex gap-2" onSubmit={addCategory}>
           <input

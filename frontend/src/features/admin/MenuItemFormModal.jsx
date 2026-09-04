@@ -4,6 +4,9 @@ import Alert from '../../components/Alert';
 import { menuApi } from '../../api/menuApi';
 import { toMessage } from '../../api/client';
 import { uploadedImageUrl } from '../../lib/foodImages';
+import { validateName, validatePrice, fieldClass } from '../../lib/validate';
+import useFieldErrors from '../../hooks/useFieldErrors';
+import FieldError from '../../components/FieldError';
 
 const blank = { categoryId: '', name: '', description: '', price: '', available: true };
 
@@ -26,6 +29,11 @@ export default function MenuItemFormModal({ item, categories, onClose, onSaved }
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
+  const errs = useFieldErrors({
+    name: () => validateName(form.name),
+    price: () => validatePrice(form.price),
+  });
+
   // Photo state: the existing photo URL, a newly picked file, and whether to remove.
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(editing ? uploadedImageUrl(item) : null);
@@ -39,7 +47,10 @@ export default function MenuItemFormModal({ item, categories, onClose, onSaved }
     return () => URL.revokeObjectURL(url);
   }, [file]);
 
-  const update = (field) => (e) => setForm({ ...form, [field]: e.target.value });
+  const update = (field) => (e) => {
+    setForm({ ...form, [field]: e.target.value });
+    errs.clear(field);
+  };
 
   const pickFile = (e) => {
     const picked = e.target.files?.[0];
@@ -65,6 +76,7 @@ export default function MenuItemFormModal({ item, categories, onClose, onSaved }
 
   const submit = async (e) => {
     e.preventDefault();
+    if (!errs.validateAll()) return;
     setSaving(true);
     setError('');
     try {
@@ -93,11 +105,11 @@ export default function MenuItemFormModal({ item, categories, onClose, onSaved }
 
   return (
     <Modal title={editing ? 'Edit item' : 'New item'} onClose={onClose}>
-      <form className="space-y-4" onSubmit={submit}>
+      <form className="space-y-4" onSubmit={submit} noValidate>
         {error && <Alert type="error">{error}</Alert>}
         <div>
           <label className="label">Category</label>
-          <select className="input" value={form.categoryId} onChange={update('categoryId')} required>
+          <select className="input" value={form.categoryId} onChange={update('categoryId')}>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -107,7 +119,13 @@ export default function MenuItemFormModal({ item, categories, onClose, onSaved }
         </div>
         <div>
           <label className="label">Name</label>
-          <input className="input" required value={form.name} onChange={update('name')} />
+          <input
+            className={fieldClass(errs.errors.name)}
+            value={form.name}
+            onChange={update('name')}
+            onBlur={errs.blur('name')}
+          />
+          <FieldError>{errs.errors.name}</FieldError>
         </div>
         <div>
           <label className="label">Description</label>
@@ -116,14 +134,15 @@ export default function MenuItemFormModal({ item, categories, onClose, onSaved }
         <div>
           <label className="label">Price</label>
           <input
-            className="input"
+            className={fieldClass(errs.errors.price)}
             type="number"
             step="0.01"
             min="0.01"
-            required
             value={form.price}
             onChange={update('price')}
+            onBlur={errs.blur('price')}
           />
+          <FieldError>{errs.errors.price}</FieldError>
         </div>
 
         <div>

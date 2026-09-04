@@ -26,10 +26,11 @@ spring:
             - Path=/api/orders/**
           filters:
             - StripPrefix=1
+        # /api/reservations/**, /api/tables/**, /api/settings -> reservation-service (strip /api)
         - id: reservation-service
           uri: ${RESERVATION_SERVICE_URI:http://localhost:8083}
           predicates:
-            - Path=/api/reservations/**
+            - Path=/api/reservations/**,/api/tables/**,/api/settings
           filters:
             - StripPrefix=1
 

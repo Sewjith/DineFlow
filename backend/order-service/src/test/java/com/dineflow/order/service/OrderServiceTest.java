@@ -2,6 +2,7 @@ package com.dineflow.order.service;
 
 import com.dineflow.order.client.MenuClient;
 import com.dineflow.order.client.MenuItemDto;
+import com.dineflow.order.client.ReservationClient;
 import com.dineflow.order.domain.Order;
 import com.dineflow.order.domain.OrderStatus;
 import com.dineflow.order.domain.OrderType;
@@ -33,6 +34,8 @@ class OrderServiceTest {
     private OrderRepository orderRepository;
     @Mock
     private MenuClient menuClient;
+    @Mock
+    private ReservationClient reservationClient;
     @InjectMocks
     private OrderService orderService;
 
@@ -60,13 +63,41 @@ class OrderServiceTest {
     }
 
     @Test
-    void rejectsDineInWithoutTableNumber() {
+    void rejectsDineInWithoutTableLabel() {
         PlaceOrderRequest request = new PlaceOrderRequest("Bob", "0770", OrderType.DINE_IN, null,
                 List.of(new OrderLineRequest(1L, 1)));
 
         assertThatThrownBy(() -> orderService.placeOrder(request))
                 .isInstanceOf(BadRequestException.class)
-                .hasMessageContaining("tableNumber");
+                .hasMessageContaining("tableLabel");
+    }
+
+    @Test
+    void rejectsDineInWithUnknownTable() {
+        when(reservationClient.tableExists("T9")).thenReturn(false);
+
+        PlaceOrderRequest request = new PlaceOrderRequest("Bea", "0770", OrderType.DINE_IN, "T9",
+                List.of(new OrderLineRequest(1L, 1)));
+
+        assertThatThrownBy(() -> orderService.placeOrder(request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("does not exist");
+    }
+
+    @Test
+    void placesDineInWithValidTable() {
+        stubSaveAndReference();
+        when(reservationClient.tableExists("T3")).thenReturn(true);
+        when(menuClient.findItem(1L))
+                .thenReturn(Optional.of(new MenuItemDto(1L, "Pizza", new BigDecimal("9.50"), true)));
+
+        PlaceOrderRequest request = new PlaceOrderRequest("Bob", "0770", OrderType.DINE_IN, "T3",
+                List.of(new OrderLineRequest(1L, 1)));
+
+        OrderResponse response = orderService.placeOrder(request);
+
+        assertThat(response.tableLabel()).isEqualTo("T3");
+        assertThat(response.status()).isEqualTo(OrderStatus.PLACED);
     }
 
     @Test
@@ -91,6 +122,25 @@ class OrderServiceTest {
         assertThatThrownBy(() -> orderService.placeOrder(request))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("does not exist");
+    }
+
+    @Test
+    void findsOrderHistoryByPhone() {
+        Order order = new Order();
+        order.setReference("ORD-ABC123");
+        order.setPhone("0770");
+        when(orderRepository.findByPhoneOrderByCreatedAtDesc("0770")).thenReturn(List.of(order));
+
+        List<OrderResponse> history = orderService.findByPhone("  0770  ");
+
+        assertThat(history).hasSize(1);
+        assertThat(history.get(0).reference()).isEqualTo("ORD-ABC123");
+    }
+
+    @Test
+    void rejectsBlankPhoneLookup() {
+        assertThatThrownBy(() -> orderService.findByPhone("  "))
+                .isInstanceOf(BadRequestException.class);
     }
 
     @Test

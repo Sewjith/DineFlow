@@ -7,6 +7,8 @@ const links = [
   { to: '/admin/orders', label: 'Orders' },
   { to: '/admin/kitchen', label: 'Kitchen' },
   { to: '/admin/reservations', label: 'Reservations' },
+  { to: '/admin/tables', label: 'Tables' },
+  { to: '/admin/settings', label: 'Settings' },
 ];
 
 const linkClass = ({ isActive }) =>

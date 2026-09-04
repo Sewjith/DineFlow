@@ -46,15 +46,41 @@ export function CartProvider({ children }) {
 
   const clear = useCallback(() => setItems([]), []);
 
+  /**
+   * Reconciles the persisted cart against the live menu (a Map of id → menu item built
+   * from a *complete* menu fetch — the customer menu returns sold-out items too, so an
+   * id absent from it has been deleted). Marks gone/sold-out lines `unavailable` and
+   * refreshes prices to the server's current value (flagging `priceChanged` for the UI).
+   * Only call after a successful fetch, so a partial list never wrongly voids the cart.
+   */
+  const reconcile = useCallback((liveById) => {
+    setItems((prev) =>
+      prev.map((i) => {
+        const live = liveById.get(i.menuItemId);
+        if (live === undefined || !live.available) {
+          return { ...i, unavailable: true, priceChanged: false };
+        }
+        return {
+          ...i,
+          unavailable: false,
+          priceChanged: live.price !== i.price,
+          price: live.price,
+        };
+      }),
+    );
+  }, []);
+
+  // Unavailable lines can't be ordered, so they don't count toward the payable total.
   const total = useMemo(
-    () => items.reduce((sum, i) => sum + i.price * i.quantity, 0),
+    () => items.reduce((sum, i) => (i.unavailable ? sum : sum + i.price * i.quantity), 0),
     [items],
   );
   const count = useMemo(() => items.reduce((sum, i) => sum + i.quantity, 0), [items]);
+  const hasUnavailable = useMemo(() => items.some((i) => i.unavailable), [items]);
 
   const value = useMemo(
-    () => ({ items, addItem, setQuantity, removeItem, clear, total, count }),
-    [items, addItem, setQuantity, removeItem, clear, total, count],
+    () => ({ items, addItem, setQuantity, removeItem, clear, reconcile, total, count, hasUnavailable }),
+    [items, addItem, setQuantity, removeItem, clear, reconcile, total, count, hasUnavailable],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

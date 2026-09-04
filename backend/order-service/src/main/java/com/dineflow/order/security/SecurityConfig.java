@@ -28,9 +28,11 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Public: place an order and check its status by reference.
+                        // Public: place an order, check its status by reference, and look up
+                        // order history by phone.
                         .requestMatchers(HttpMethod.POST, "/orders").permitAll()
                         .requestMatchers(HttpMethod.GET, "/orders/reference/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/orders/history").permitAll()
                         // Everything else is admin-only.
                         .anyRequest().hasRole("ADMIN"))
                 .exceptionHandling(ex -> ex

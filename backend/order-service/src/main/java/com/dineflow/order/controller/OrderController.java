@@ -8,7 +8,9 @@ import com.dineflow.order.dto.UpdateStatusRequest;
 import com.dineflow.order.service.OrderService;
 import com.dineflow.order.socket.OrderEventPublisher;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,6 +25,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/orders")
+@Validated
 public class OrderController {
 
     private final OrderService orderService;
@@ -48,6 +51,13 @@ public class OrderController {
     @GetMapping("/reference/{reference}")
     public OrderResponse getByReference(@PathVariable String reference) {
         return orderService.findByReference(reference);
+    }
+
+    /** Public order history lookup by phone (e.g. when a customer has lost their reference). */
+    @GetMapping("/history")
+    public List<OrderResponse> history(
+            @RequestParam @NotBlank(message = "phone is required") String phone) {
+        return orderService.findByPhone(phone);
     }
 
     // --- Admin ---
